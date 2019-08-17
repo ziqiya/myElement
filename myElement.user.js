@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         我的元素
-// @namespace    http://tampermonkey.net/
-// @version      0.1
+// @namespace    https://github.com/RuanXuSong/myElement
+// @version      1.0
 // @description  用于在页面中插入元素，测试元素的样式
 // @author       Ruan Xusong
-// @match        https://www.tampermonkey.net/index.php?version=4.9.5960&ext=gcal&updated=true
 // @match        http://*/*
 // @match        https://*/*
 // @grant        none
