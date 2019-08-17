@@ -170,7 +170,7 @@
 	 */
 	function drawDot(key, x, y, color, dotContainer) {
 		const dotDiv = `<div class="line${key}" style="background:${color ||
-			'#000'};position:fixed;left:${x}px;top:${y}px;width:10px;height:10px;transform:translate(-50%,-50%);border-radius: 100%;z-index:1000"></div>`;
+			'#000'};position:fixed;left:${x}px;top:${y}px;width:5px;height:5px;transform:translate(-50%,-50%);border-radius: 100%;z-index:1000"></div>`;
 		if (dotContainer) {
 			$(dotContainer).append(dotDiv);
 			return $(dotContainer);
@@ -189,9 +189,9 @@
 		// 线长度
 		const lineLength = Math.floor(Math.sqrt(Math.abs((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))));
 		// 初始化间隔为实线
-		const initialPadding = 5;
+		const initialPadding = 1;
 		// 间隔
-		const padding = lineType && lineType === 'dotted' ? 15 : initialPadding;
+		const padding = lineType && lineType === 'dotted' ? 8 : initialPadding;
 		// 每一次变化的x,y值
 		const stepX = (Math.abs(x2 - x1) / lineLength) * padding;
 		const stepY = (Math.abs(y2 - y1) / lineLength) * padding;
