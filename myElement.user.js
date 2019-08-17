@@ -471,7 +471,7 @@
 				content: 'button',
 				type: 'button',
 				initialStyle:
-					'position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;border:1px solid #333',
+					'position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;',
 			},
 			// line中的长宽属性无效
 			{
@@ -521,6 +521,8 @@
 			this.appendCollapseBtn();
 			// 导入CSS
 			this.importCss();
+			// 初始关闭状态
+			this.toggleCollapse();
 		};
 
 		/**
@@ -622,25 +624,30 @@
 			});
 		};
 
+		// 点击收缩按钮事件
+		this.toggleCollapse = () => {
+			// 若已经折叠，则打开
+			if ($('.collapseBtn').hasClass('collapsed')) {
+				$('.collapseBtn').removeClass('collapsed');
+				$('.collapseBtn').text('<');
+				$('#siderBar').css({ left: '0px', 'min-height': '200px', height: 'auto' });
+				$('.tabsBtnWrap').show();
+				$('.siderBarUlWrap').show();
+			} else {
+				// 若未折叠，则折叠
+				$('.collapseBtn').addClass('collapsed');
+				$('.collapseBtn').text('>');
+				$('#siderBar').css({ left: '-184px', 'min-height': 'unset', height: '40px' });
+				$('.tabsBtnWrap').hide();
+				$('.siderBarUlWrap').hide();
+			}
+		};
+
 		// 插入收缩弹出按钮
 		this.appendCollapseBtn = () => {
 			$('#siderBar').append(this.collapseBtn);
 			$('.collapseBtn').click(() => {
-				// 若已经折叠，则打开
-				if ($('.collapseBtn').hasClass('collapsed')) {
-					$('.collapseBtn').removeClass('collapsed');
-					$('.collapseBtn').text('<');
-					$('#siderBar').css({ left: '0px', 'min-height': '200px', height: 'auto' });
-					$('.tabsBtnWrap').show();
-					$('.siderBarUlWrap').show();
-				} else {
-					// 若未折叠，则折叠
-					$('.collapseBtn').addClass('collapsed');
-					$('.collapseBtn').text('>');
-					$('#siderBar').css({ left: '-184px', 'min-height': 'unset', height: '40px' });
-					$('.tabsBtnWrap').hide();
-					$('.siderBarUlWrap').hide();
-				}
+				this.toggleCollapse();
 			});
 		};
 
