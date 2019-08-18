@@ -2,7 +2,7 @@
 // @name         我的元素
 // @namespace    https://github.com/RuanXuSong/myElement
 // @version      1.0
-// @description  用于在页面中插入元素，测试元素的样式
+// @description  用于在页面中插入元素，改变元素样式用于展示
 // @author       Ruan Xusong
 // @match        http://*/*
 // @match        https://*/*
