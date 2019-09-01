@@ -12,7 +12,31 @@
 
 (function() {
   'use strict';
-
+  // 元素列表(注:initialStyle中不可有空格)
+  const myElementsList = [
+    {
+      name: 'div',
+      content: '',
+      type: 'div',
+      initialStyle:
+        'position:fixed;left:50%;top:50%;width:100px;height:100px;background:#0189fb;z-index:100;cursor:pointer;'
+    },
+    {
+      name: 'button',
+      content: 'button',
+      type: 'button',
+      initialStyle:
+        'position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;'
+    },
+    // line中的长宽属性无效
+    {
+      name: 'line',
+      content: '',
+      type: 'line',
+      initialStyle:
+        'position:fixed;left:50%;top:50%;background:#000;z-index:100'
+    }
+  ];
   /**
    * @功能描述: 初始化元素
    * @参数:
@@ -132,7 +156,7 @@
     } else {
       const initialStyle = $(this).attr('initialStyle');
       // 文字内容
-      const content = $(this).attr('content');
+      const content = $(this).attr('content') || '';
       // 创建元素
       const element = elementFunc.createEle(
         datePoint,
@@ -389,10 +413,17 @@
       let elementLeft = this.o.initialLeft + mouseLeft - this.o.initialX;
       let elementTop = this.o.initialTop + mouseTop - this.o.initialY;
       $(`#${datePoint}`).css({ left: elementLeft, top: elementTop });
+      // 移动同时改变input的值
+      $(`#left${datePoint}`).val(elementLeft + 'px');
+      $(`#top${datePoint}`).val(elementTop + 'px');
+      // 存储left和top的位置
+      this.setLsStyle('left', elementLeft + 'px');
+      this.setLsStyle('top', elementTop + 'px');
     };
 
     // 双击元素事件
-    this.elementDblclick = () => {
+    this.elementDblclick = __this => {
+      // 保存当前点击对象
       this.ls.setItem('selectedElement', datePoint);
       // 清除原先input
       $('.detailLi').remove();
@@ -407,48 +438,119 @@
       const lsdetailObj = JSON.parse(this.ls.getItem('siderBarCssObj'))[
         datePoint
       ];
-      const initialList = ['text', 'color', 'width', 'height', 'background'];
+      // 默认样式表
+      const initialList = [
+        'text',
+        'color',
+        'width',
+        'height',
+        'background',
+        'z-index',
+        'border-radius',
+        'position',
+        'top',
+        'left'
+      ];
+
+      /**
+       * @功能描述: 判断是否没有样式或只有left，top就先用默认样式表
+       * @参数:
+       * @返回值: boolean（为空true，否则false)
+       */
+      function withoutPositionEmpty(obj) {
+        const copiedObj = shallowCopy(obj);
+        delete copiedObj['top'];
+        delete copiedObj['left'];
+        return JSON.stringify(copiedObj) === '{}';
+      }
+      // 浅拷贝
+      function shallowCopy(src) {
+        const dst = {};
+        for (let prop in src) {
+          if (src.hasOwnProperty(prop)) {
+            dst[prop] = src[prop];
+          }
+        }
+        return dst;
+      }
+      // 如果没有样式或只有left，top就先用默认样式表
       const detailList =
-        lsdetailObj && JSON.stringify(lsdetailObj) !== '{}'
+        lsdetailObj && !withoutPositionEmpty(lsdetailObj)
           ? Object.keys(lsdetailObj)
           : initialList;
+      // 获得初始化样式
+      const initialStyleString = $(__this)[0].target.style.cssText;
+      let styleArr = initialStyleString.split(';');
+      styleArr = styleArr.map(item => item.split(':'));
+      // 批量存储初始化样式
+      styleArr.map(([cssType, value]) => {
+        if (cssType && value) {
+          this.setLsStyle(cssType.trim(), value.trim());
+        }
+      });
       // 插入详情list元素
       detailList.map((item, idx) => {
         const mixedId = datePoint + idx;
+        // 初始样式数组
+        const initialArr = styleArr.find(([cssType, value]) => {
+          return cssType.trim() === item;
+        });
+        // 标记left，top的inputId
+        const inputId =
+          item === 'left' || item === 'top'
+            ? item + datePoint
+            : `input${mixedId}`;
+        const initialStyle =
+          initialArr && initialArr[1] ? initialArr[1].trim() : '';
         const _this = this;
-        let modifyLi = `<li class="detailLi ${datePoint}"><span>${item}:</span><input cssType=${item} id='input${mixedId}' value="${
-          lsdetailObj && lsdetailObj !== {} && lsdetailObj[item]
+        // 编辑后的样式
+        let modifyLi = `<li class="detailLi ${datePoint}"><span>${item}:</span><input cssType=${item} id='${inputId}' value="${
+          lsdetailObj && !withoutPositionEmpty(lsdetailObj) && lsdetailObj[item]
             ? lsdetailObj[item]
             : ''
         }"/></li>`;
-        let initialLi = `<li class="detailLi ${datePoint}"><span>${item}:</span><input cssType=${item} id='input${mixedId}'/></li>`;
-        let detailLi = lsdetailObj && lsdetailObj !== {} ? modifyLi : initialLi;
+        // 初始化的样式
+        let initialLi = `<li class="detailLi ${datePoint}"><span>${item}:</span><input cssType=${item} id='${inputId}' value="${initialStyle}"/></li>`;
+        let detailLi =
+          lsdetailObj && !withoutPositionEmpty(lsdetailObj)
+            ? modifyLi
+            : initialLi;
         $('#siderBar .infoUl').append(detailLi);
         $(`#input${mixedId}`).on('change', function() {
           const cssType = $(this).attr('cssType');
           const val = $(this).val();
-
-          // 缓存中设置新的CSS样式
-          let oldSiderBarCssObj = JSON.parse(
-            _this.ls.getItem('siderBarCssObj')
-          );
-          let oldCssObj =
-            JSON.parse(_this.ls.getItem('siderBarCssObj'))[datePoint] || {};
-          let newCssObj = { ...oldCssObj, [cssType]: val };
-          _this.ls.setItem(
-            'siderBarCssObj',
-            JSON.stringify({
-              ...oldSiderBarCssObj,
-              [datePoint]: newCssObj
-            })
-          );
-          if (cssType === 'text') {
-            $(`#${datePoint}`).text(val);
-          } else {
-            $(`#${datePoint}`).css(cssType, val);
-          }
+          // 缓存中保存样式
+          _this.setLsStyle(cssType, val);
         });
       });
+    };
+
+    /**
+     * @功能描述: 缓存中保存样式
+     * @参数: cssType：样式名，val：样式值
+     * @返回值:
+     */
+    this.setLsStyle = (cssType, val) => {
+      if (!this.ls.getItem('siderBarCssObj')) {
+        this.ls.setItem('siderBarCssObj', JSON.stringify({}));
+      }
+      // 缓存中设置新的CSS样式
+      let oldSiderBarCssObj = JSON.parse(this.ls.getItem('siderBarCssObj'));
+      let oldCssObj =
+        JSON.parse(this.ls.getItem('siderBarCssObj'))[datePoint] || {};
+      let newCssObj = { ...oldCssObj, [cssType]: val };
+      this.ls.setItem(
+        'siderBarCssObj',
+        JSON.stringify({
+          ...oldSiderBarCssObj,
+          [datePoint]: newCssObj
+        })
+      );
+      if (cssType === 'text') {
+        $(`#${datePoint}`).text(val);
+      } else {
+        $(`#${datePoint}`).css(cssType, val);
+      }
     };
 
     // 生成取消画线按钮
@@ -531,70 +633,47 @@
    */
   function InitialCom() {
     this.ls = window.localStorage;
-    // 元素列表(注:initialStyle中不可有空格)
-    this.myElementsList = [
-      {
-        name: 'div',
-        content: '我是内容',
-        type: 'div',
-        initialStyle:
-          'position:fixed;left:50%;top:50%;width:100px;height:100px;background:#0189fb;z-index:100;cursor:pointer;'
-      },
-      {
-        name: 'button',
-        content: 'button',
-        type: 'button',
-        initialStyle:
-          'position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;'
-      },
-      // line中的长宽属性无效
-      {
-        name: 'line',
-        content: '',
-        type: 'line',
-        initialStyle:
-          'position:fixed;left:50%;top:50%;background:#000;z-index:100'
-      }
-    ];
     this.appendInputLi = () => {
       let inputLi = `<li class="detailLi ${datePoint}"><input id='cssType${datePoint}'/><div>:</div><input cssType='' id='input${datePoint}'/></li>`;
       $('#siderBar .infoUl').append(inputLi);
     };
     // 侧边栏div
     this.siderBarHtml = `
-			<div id="siderBar">
-				<div class="tabsBtnWrap">
-					<div class="tabsBtn">元素</div>
-					<div class="tabsBtn">属性</div>
-				</div>
-				<div class="siderBarUlWrap">
-          <ul class="siderBarUl">
-            <div class="fillFormWrap">
-              <div class="fillFormInputWrap">
-                <li class="fillFormLi">
-                  <input id="fillFormName" class="fillFormName" placeholder="请输入key值"/>
-                  <div class="fillFormColon">:</div>
-                  <input id="fillFormInput" class="fillFormInput" placeholder="请输入value值"/>
-                </li>
+      <div id="siderBar">
+        <div class="container">
+          <div class="tabsBtnWrap">
+            <div class="tabsBtn active">元素</div>
+            <div class="tabsBtn">属性</div>
+          </div>
+          <div class="siderBarUlWrap">
+            <ul class="siderBarUl">
+              <div class="fillFormWrap">
+                <div class="fillFormInputWrap">
+                  <li class="fillFormLi">
+                    <input id="fillFormName" class="fillFormName" placeholder="请输入key值"/>
+                    <div class="fillFormColon">:</div>
+                    <input id="fillFormInput" class="fillFormInput" placeholder="请输入value值"/>
+                  </li>
+                </div>
+                <textArea id="stringTextarea" autofocus placeholder="请输入JSON字符串,也可通过上方输入框自动生成,通过更改input可添加新的键值对"/>
               </div>
-              <textArea id="stringTextarea" autofocus placeholder="请输入JSON字符串,也可通过上方输入框自动生成,通过更改input可添加新的键值对"/>
-            </div>
-						<div class="funcBtnWrap" style="bottom:34px">
-							<div id="downloadBtn" class="downloadBtn">下载样式</div>
-							<div id="cancelBtn" class="cancelBtn">删除</div>
-							<div id="lineCancelBtn" class="cancelBtn">点击取消画线</div>
-						</div>
-						<div class="funcBtnWrap">
-							<div id="fillFormBtn" class="fillFormBtn">一键填充表单</div>
-						</div>
-					</ul>
-					<ul class="infoUl">
-						<div class="emptyBox">
-							当前属性为空，请先新建实例元素，再双击选择添加属性!
-						</div>
-						<div class="addInfoBtn">+</div>
-					</ul>
-				</div>
+              <div class="funcBtnWrap" style="bottom:34px">
+                <div id="downloadBtn" class="downloadBtn">下载样式</div>
+                <div id="cancelBtn" class="cancelBtn">删除</div>
+                <div id="lineCancelBtn" class="cancelBtn">点击取消画线</div>
+              </div>
+              <div class="funcBtnWrap">
+                <div id="fillFormBtn" class="fillFormBtn">一键填充表单</div>
+              </div>
+            </ul>
+            <ul class="infoUl">
+              <div class="emptyBox">
+                当前属性为空，请先新建实例元素，再双击选择添加属性!
+              </div>
+              <div class="addInfoBtn">+</div>
+            </ul>
+          </div>
+        </div>
 			</div>`;
 
     // 收缩弹出按钮
@@ -666,11 +745,24 @@
      * @返回值:
      */
     this.deleteBtnclick = _this => {
+      const __this = this;
       $(_this)
         .addClass('cancelDelete')
         .text('退出删除');
       $('.createdElement')
         .bind('click', function() {
+          const deletedId = $(this).attr('id');
+          // 缓存中设置删除对应的CSS样式
+          let oldSiderBarCssObj = JSON.parse(
+            __this.ls.getItem('siderBarCssObj')
+          );
+          delete oldSiderBarCssObj[deletedId];
+          __this.ls.setItem(
+            'siderBarCssObj',
+            JSON.stringify({
+              ...oldSiderBarCssObj
+            })
+          );
           $(this).remove();
         })
         .css('cursor', 'crosshair');
@@ -774,17 +866,28 @@
      * @返回值:
      */
     this.tabsSwitchIndex = index => {
-      $('.siderBarUlWrap ul')
-        .eq(index)
-        .show()
-        .siblings(index)
-        .hide();
+      if (
+        !$('.tabsBtnWrap .tabsBtn')
+          .eq(index)
+          .hasClass('active')
+      ) {
+        $('.tabsBtnWrap .tabsBtn')
+          .eq(index)
+          .addClass('active')
+          .siblings(index)
+          .removeClass('active');
+        $('.siderBarUlWrap ul')
+          .eq(index)
+          .show()
+          .siblings(index)
+          .hide();
+      }
     };
 
     // 插入list元素
     this.appendList = () => {
-      this.myElementsList.map(({ name, initialStyle, type, content }) => {
-        let element = `<li class="elementListLi" type=${type} content=${content} initialStyle=${initialStyle}>${name}</li>`;
+      myElementsList.map(({ name, initialStyle, type, content }) => {
+        let element = `<li class="elementListLi" type=${type} initialStyle=${initialStyle} content=${content}>${name}</li>`;
         $('#siderBar .siderBarUl').append(element);
       });
     };
@@ -827,32 +930,33 @@
     // 导入css样式
     this.importCss = () => {
       const cssString = `
-			.siderBarUlWrap{display:flex;}
+      .siderBarUlWrap{display:flex;}
+      .container{width:90%;}
       #lineCancelBtn{display:none;z-index:10;position: absolute;width: 96%;}
-      .fillFormWrap{display:none;width:88%;}
-      #stringTextarea{width: 100%;min-height: 68px;font-size: 12px;}
-      .fillFormInputWrap{display: flex;flex-direction: column;width: 102%;}
+      .fillFormWrap{display:none;width:100%;}
+      #stringTextarea{width: 98%;min-height: 68px;font-size: 12px;}
+      .fillFormInputWrap{display: flex;flex-direction: column;width: 100%;}
       .fillFormLi{margin-bottom: 6px;display: flex;width: 100%;}
       .fillFormName,.fillFormInput{width: 100%;height: 20px;}
       .fillFormColon{color: #fff;margin: 0 2px;line-height: 20px;}
 			.funcBtnWrap{display:flex;position: absolute;bottom: 8px;width: 84%;justify-content:space-between;}
 		  .elementListLi:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
-			.collapseBtn{width: 20px;height: 20px;transform: translate(0px, 10px);background: rgba(255,255,255,0.6);text-align: center;border-radius: 10px;color: #333;font-weight: bold;line-height: 20px;cursor: pointer;position: absolute;right: 2px;top: 25%;}
+			.collapseBtn{user-select: none;width: 20px;height: 20px;transform: translate(0px, 10px);background: rgba(255,255,255,0.6);text-align: center;border-radius: 10px;color: #333;font-weight: bold;line-height: 20px;cursor: pointer;position: absolute;right: 2px;top: 25%;}
 			.siderBarUl{width: 100%;padding: 0;display: flex;flex-direction: column;}
-			.detailLi{display:flex;margin-bottom: 10px;border-bottom: 1px solid #eee;padding: 10px 0 5px 0;width: 90%;}
+			.detailLi{display:flex;margin-bottom: 10px;border-bottom: 1px solid #eee;padding: 10px 0 5px 0;width: 100%;}
 			.detailLi input{width: 100%;}
 			.detailLi span{margin-right: 5px;color:#fff;text-align: right;white-space: nowrap;}
 			.collapsed{top: 50%;transform: translate(0px, -50%);right:8px;}
 			.fillFormBtn,.cancelBtn,.downloadBtn{flex:1;border-radius: 5px;font-size: 14px;background: #fff;text-align: center;height: 20px;line-height: 20px;margin: 0px 4px;cursor:pointer;}
 			.fillFormBtn:hover,.cancelBtn:hover,.downloadBtn:hover{box-shadow: 0px 0px 10px #0189fb;}
 			.emptyBox{color:#fff;margin-top: 20px;}
-			.addInfoBtn{width: 50px;height: 20px;position: absolute;bottom: 6px;left: 50%;font-size: 20px;transform: translate(-50%, 0px);color: #fff;line-height: 20px;border-radius: 5px;background: #0189fb;;text-align: center;cursor:pointer;}
-			.infoUl{width: 100%;padding: 0 10px;display: flex;flex-direction: column;display:none;padding-bottom: 20px;}
-			.elementListLi{width: 84%;background: #fff;list-style: none;height: 20px;line-height: 20px;padding-left: 10px;border-radius: 5px;margin-bottom: 10px;border: 0;cursor:pointer;border: 1px solid #fff;}
-			.tabsBtnWrap{display: flex;width: 96%;margin-bottom: 10px;justify-content: space-between;}
-			.tabsBtn{border: 1px solid #fff;text-align:center;width:48%;}
+			.addInfoBtn{width: 50px;height: 20px;position: absolute;bottom: 6px;left: 50%;font-size: 20px;transform: translate(-50%, 0px);color: #fff;line-height: 20px;border-radius: 5px;background: #0189fb;text-align: center;cursor:pointer;}
+			.infoUl{width: 100%;padding: 0;display: flex;flex-direction: column;display:none;padding-bottom: 20px;}
+			.elementListLi{width: 90%;background: #fff;list-style: none;height: 20px;line-height: 20px;padding-left: 10%;border-radius: 5px;margin-bottom: 10px;border: 0;cursor:pointer;border: 1px solid #fff;text-align:left;}
+			.tabsBtnWrap{display: flex;width: 100%;margin-bottom: 10px;justify-content: space-between;}
 			.tabsBtn:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
-			.tabsBtn{flex: 1;background: #fff;margin-right: 5px;border-radius: 5px 5px 0 0;cursor:pointer;}
+			.tabsBtn{color:#0189fb;border: 1px solid #fff;text-align:center;width:48%;flex: 1;background: #fff;border-radius: 5px 5px 0 0;cursor:pointer;}
+			.tabsBtnWrap .active{color:#fff;background:#0189fb;border: 1px solid #0189fb;}
 			#siderBar{overflow: hidden;flex-direction: column;z-index:1000;background: rgba(0,0,0,0.3);position: fixed;left: 0;top: 10%;width: 200px;min-height: 200px;border-radius: 0 5px 5px 0;padding: 10px;display:flex;transition:all 0.3s ease}`;
       var style = document.createElement('style');
       style.type = 'text/css';
