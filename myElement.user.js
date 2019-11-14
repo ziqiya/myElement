@@ -112,8 +112,103 @@
 
     // python生成功能
     //===start===
+
+    /** 打开python表单 */
     $("#pythonBtn").click(function() {
       initialCom.pythonForm();
+    });
+
+    /** 清空python存储 */
+    $("#clearBtn").click(function() {
+      const ls = window.localStorage;
+      ls.setItem("pythonObj", "");
+      $(".selectBtn").text("请选择");
+    });
+
+    /** 查看并打印当前python */
+    $("#inspectCurrentPython").click(function() {
+      const ls = window.localStorage;
+      let pythonString = ls.getItem("pythonObj");
+      alert(pythonString);
+      console.log(pythonString);
+    });
+
+    /**
+     * @功能描述: 点击按钮新增python input
+     * @参数: 无
+     * @返回值: 无
+     */
+    $(".addPythonBtn").click(function() {
+      const datePoint = new Date().getTime();
+      const attrFunc = new AttrFunc(datePoint);
+      // TODO
+      attrFunc.appendPythonInput();
+      // python名称改变事件
+      $(`#pythonTitle${datePoint}`).change(attrFunc.pythonNameChange);
+      // Dom选择内容点击事件
+      $(`#pythonDom${datePoint}`).click(function() {
+        attrFunc.pythonListen();
+      });
+      $(".pythonFormActive").click(function() {
+        attrFunc.removePythonListen();
+      });
+    });
+
+    /** 转换HTML为字符串 */
+    function ToHtmlString(htmlStr) {
+      return toTXT(htmlStr).replace(
+        /\&lt\;br[\&ensp\;|\&emsp\;]*[\/]?\&gt\;|\r\n|\n/g,
+        "<br/>"
+      );
+    }
+    function toTXT(str) {
+      var RexStr = /\<|\>|\"|\'|\&|　| /g;
+      str = str.replace(RexStr, function(MatchStr) {
+        switch (MatchStr) {
+          case "<":
+            return "&lt;";
+            break;
+          case ">":
+            return "&gt;";
+            break;
+          case '"':
+            return "&quot;";
+            break;
+          case "'":
+            return "&#39;";
+            break;
+          case "&":
+            return "&amp;";
+            break;
+          case " ":
+            return "&ensp;";
+            break;
+          case "　":
+            return "&emsp;";
+            break;
+          default:
+            break;
+        }
+      });
+      return str;
+    }
+
+    /** 将html转换为可以存储的片段,替换<>间的"为' */
+    function toStorageString(str) {
+      var RexStr = /\<(.*)(")(.*)\>/g;
+      str = str.replace(RexStr, function(MatchStr) {
+        return MatchStr.replace(/"/g, "'");
+      });
+      return str;
+    }
+
+    /**
+     * @功能描述: 点击python下载按钮
+     * @参数:
+     * @返回值:
+     */
+    $("#pythonDownload").click(function() {
+      initialCom.pythonDownloadClick();
     });
 
     // python生成功能
@@ -133,9 +228,8 @@
      * @参数:
      * @返回值:
      */
-
-    $(".downloadBtn").click(function() {
-      initialCom.downloadBtnclick();
+    $("#downloadBtn").click(function() {
+      initialCom.downloadBtnClick();
     });
 
     /**
@@ -315,10 +409,183 @@
      * @返回值:
      */
     function AttrFunc(datePoint) {
+      this.selectedDom = "";
+      this.domAlertId = "spyon-container";
+      this.posBuffer = 3;
       this.appendInputLi = () => {
         let inputLi = `<li class="detailLi ${datePoint}"><input id='cssType${datePoint}'/><div class="fillFormColon">:</div><input cssType='' id='input${datePoint}'/></li>`;
         $("#siderBar .infoUl").append(inputLi);
       };
+      this.appendPythonInput = () => {
+        let inputLi = `<li class="fillFormLi ${datePoint}"><input id='pythonTitle${datePoint}' class="pythonName"/><div class="fillFormColon">:</div><button class="selectBtn" id='pythonDom${datePoint}'>请选择</button></li>`;
+        $(".pythonUl").append(inputLi);
+        $(".pythonEmptyBox").hide();
+      };
+
+      /**
+       * @功能描述: python字段name改变事件
+       * @参数:
+       * @返回值:
+       */
+      this.pythonNameChange = function() {
+        const ls = window.localStorage;
+        $(`#pythonDom${datePoint}`).attr("pythonName", $(this).val());
+        if ($(`#pythonDom${datePoint}`).attr("pythonType") !== "") {
+        }
+      };
+
+      /** python-创造监听样式弹窗 */
+      this.pythonCreate = () => {
+        const div = document.createElement("div");
+        div.id = this.domAlertId;
+        div.setAttribute(
+          "style",
+          `
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: auto;
+      height: auto;
+      padding: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      background-color: #444;
+      z-index: 100000;
+      font-size: 12px;
+      border-radius: 5px;
+      line-height: 20px;
+      max-width: 45%;
+      text-align: left;
+      `
+        );
+        document.body.appendChild(div);
+      };
+
+      /** python-显示弹窗 */
+      this.pythonShow = e => {
+        const spyContainer = document.getElementById(this.domAlertId);
+        if (!spyContainer) {
+          this.pythonCreate();
+          return;
+        }
+        if (spyContainer.style.display !== "block") {
+          spyContainer.style.display = "block";
+        }
+      };
+
+      /** python-隐藏弹窗 */
+      this.pythonHide = e => {
+        document.getElementById(this.domAlertId).style.display = "none";
+      };
+
+      /** python-获得srcoll的宽度高度 */
+      this.getScrollPos = () => {
+        const ieEdge = document.all ? false : true;
+        if (!ieEdge) {
+          return {
+            left: document.body.scrollLeft,
+            top: document.body.scrollTop
+          };
+        } else {
+          return {
+            left: document.documentElement.scrollLeft,
+            top: document.documentElement.scrollTop
+          };
+        }
+      };
+
+      /** python-滑过元素 */
+      this.pythonGlide = e => {
+        const spyContainer = document.getElementById(this.domAlertId);
+        if (!spyContainer) {
+          this.pythonCreate();
+          return;
+        }
+        const left = e.clientX + this.getScrollPos().left + this.posBuffer;
+        const top = e.clientY + this.getScrollPos().top + this.posBuffer;
+        spyContainer.innerHTML = this.showAttributes(e.target);
+        if (left + spyContainer.offsetWidth > window.innerWidth) {
+          spyContainer.style.left = left - spyContainer.offsetWidth + "px";
+        } else {
+          spyContainer.style.left = left + "px";
+        }
+        spyContainer.style.top = top + "px";
+      };
+
+      /** python-获得dom属性 */
+      this.showAttributes = el => {
+        const nodeName = `${el.nodeName.toLowerCase()}`;
+        // 单标签
+        const singleTags = ["img", "input"];
+        const nodeNameDom = `<span style="font-weight:bold;">${nodeName}</span><br/>`;
+        const attrArr = Array.from(el.attributes);
+        const attributes = attrArr.reduce((attrs, attr) => {
+          attrs += `${attr.nodeName}='${attr.nodeValue}' `;
+          return attrs;
+        }, "");
+        const attributesDom = attrArr.reduce((attrs, attr) => {
+          attrs += `<span style="color:#ffffcc;">${attr.nodeName}</span>="${attr.nodeValue}"<br/>`;
+          return attrs;
+        }, "");
+        const htmlDom = `<div>&lt;${nodeName} ${attributes}&gt; ${ToHtmlString(
+          el.innerHTML
+        )} &lt;/${nodeName}&gt;</div><br/>`;
+        this.selectedDom = `<${nodeName} ${attributes}> ${
+          !singleTags.includes(nodeName) ? `${el.innerHTML} </${nodeName}>` : ""
+        }`;
+        return nodeNameDom + attributesDom + htmlDom;
+      };
+
+      /** python-存储点击的元素 */
+      this.selectPythonDom = () => {
+        const ls = window.localStorage;
+        // 移除监听事件
+        this.removePythonListen();
+        if ($(`#pythonTitle${datePoint}`).val() !== "") {
+          const name = $(`#pythonTitle${datePoint}`).val();
+          const innerHTML = toStorageString(this.selectedDom);
+          // 缓存中设置新的dom元素
+          let oldPythonObj = ls.getItem("pythonObj")
+            ? JSON.parse(ls.getItem("pythonObj"))
+            : {};
+          ls.setItem(
+            "pythonObj",
+            JSON.stringify({
+              ...oldPythonObj,
+              [name]: innerHTML
+            })
+          );
+          $(`#pythonDom${datePoint}`).text("已选择");
+        } else {
+          alert("请先输入name!");
+        }
+      };
+
+      /**
+       * @功能描述: 打开python监听当前元素
+       * @参数:
+       * @返回值:
+       */
+      this.pythonListen = () => {
+        document.body.addEventListener("mousemove", this.pythonGlide);
+        document.body.addEventListener("mouseover", this.pythonShow);
+        document.body.addEventListener("mouseleave", this.pythonHide);
+        document.body.addEventListener("mousedown", this.selectPythonDom);
+      };
+
+      /**
+       * @功能描述:移除python监听元素
+       * @参数:
+       * @返回值:
+       */
+      this.removePythonListen = () => {
+        document.body.removeEventListener("mousemove", this.pythonGlide);
+        document.body.removeEventListener("mouseover", this.pythonShow);
+        document.body.removeEventListener("mouseleave", this.pythonHide);
+        document.body.removeEventListener("mousedown", this.selectPythonDom);
+        document.getElementById(this.domAlertId).style.display = "none";
+      };
+
       /**
        * @功能描述: 改变css名称的事件
        * @参数:
@@ -588,7 +855,7 @@
         if ($("#cancelBtn").hasClass("cancelDelete")) {
           $("#cancelBtn")
             .removeClass("cancelDelete")
-            .text("删除");
+            .text("删除元素");
           $(".createdElement")
             .unbind("click")
             .css("cursor", "pointer");
@@ -647,6 +914,7 @@
         });
       };
 
+      /** 生成动态背景遮罩 */
       this.createCover = () => {
         function n(n, e, t) {
           return n.getAttribute(e) || t;
@@ -787,20 +1055,27 @@
               </div>
                <div class="pythonWrap">
                 <div class="fillFormInputWrap">
-                  <li class="fillFormLi">
-                    <input id="fillFormName" class="fillFormName" placeholder="请输入key值"/>
-                    <div class="fillFormColon">:</div>
-                    <input id="fillFormInput" class="fillFormInput" placeholder="请输入value值"/>
-                  </li>
+                  <div class="pythonUl" style="display:block">
+                  </div>
+                  <div class="pythonEmptyBox">
+                    当前python为空，请先点击新建，再选择对应dom元素!
+                  </div>
+                  <div class="addPythonBtn">+</div>
                 </div>
               </div>
               <div class="funcBtnWrap" style="bottom:60px">
                 <div id="downloadBtn" class="downloadBtn">下载样式</div>
-                <div id="cancelBtn" class="cancelBtn">删除</div>
+                <div id="cancelBtn" class="cancelBtn">删除元素</div>
+                
+                <div id="pythonDownload" class="downloadBtn" style="display:none">下载Python</div>
+                <div id="clearBtn" class="cancelBtn">清空Python</div>
                 <div id="lineCancelBtn" class="cancelBtn">点击取消画线</div>
               </div>
               <div class="funcBtnWrap" style="bottom:34px">
                 <div id="fillFormBtn" class="fillFormBtn">一键填充表单</div>
+              </div>
+              <div class="funcBtnWrap" style="bottom:34px">
+                <div id="inspectCurrentPython" class="fillFormBtn">查看console当前Python</div>
               </div>
               <div class="funcBtnWrap">
                 <div id="pythonBtn" class="fillFormBtn">自动生成爬虫</div>
@@ -840,7 +1115,7 @@
        * @参数:
        * @返回值:
        */
-      this.downloadBtnclick = () => {
+      this.downloadBtnClick = () => {
         const datePoint = longDateFormate(new Date());
         const contentObj = this.ls.getItem("siderBarCssObj")
           ? JSON.parse(this.ls.getItem("siderBarCssObj"))
@@ -855,8 +1130,22 @@
           };
         });
         const content = JSON.stringify(transContentObj);
-        const fileName = `${datePoint}下载的的样式`;
+        const fileName = `${datePoint}下载的样式`;
         this.createHref(fileName, content);
+      };
+
+      /**
+       * @功能描述:点击python下载按钮
+       * @参数:
+       * @返回值:
+       */
+      this.pythonDownloadClick = () => {
+        const datePoint = longDateFormate(new Date());
+        const contentObj = this.ls.getItem("pythonObj")
+          ? this.ls.getItem("pythonObj")
+          : "";
+        const fileName = `${datePoint}下载的python`;
+        this.createHref(fileName, contentObj);
       };
 
       /**
@@ -921,7 +1210,7 @@
       this.cancelBtnClick = _this => {
         $(_this)
           .removeClass("cancelDelete")
-          .text("删除");
+          .text("删除元素");
         $(".createdElement")
           .unbind("click")
           .css("cursor", "pointer");
@@ -938,12 +1227,26 @@
       this.pythonForm = () => {
         const _this = this;
         $(".pythonWrap").show();
+        $("#clearBtn").show();
+        $("#inspectCurrentPython").show();
+        $("#fillFormBtn").hide();
+        $("#cancelBtn").hide();
+        $("#downloadBtn").hide();
+        $("#pythonDownload").show();
+        $("#pythonBtn").addClass("pythonFormActive");
         $("#pythonBtn")
           .text("退出python模式")
           .click(function() {
+            $("#downloadBtn").show();
+            $("#pythonDownload").hide();
             $("#pythonBtn").text("自动生成爬虫");
             $(".elementListLi").show();
             $(".pythonWrap").hide();
+            $("#clearBtn").hide();
+            $("#inspectCurrentPython").hide();
+            $("#fillFormBtn").show();
+            $("#cancelBtn").show();
+            $(this).removeClass("pythonFormActive");
             $(this).click(function() {
               _this.pythonForm();
             });
@@ -1089,6 +1392,8 @@
       // 导入css样式
       this.importCss = () => {
         const cssString = `
+      #clearBtn,#inspectCurrentPython{display:none;}
+      .selectBtn,.detailLi input{width:100%;}
       .siderBarUlWrap{display:flex;}
       .container{width:90%;}
       #lineCancelBtn{display:none;z-index:10;position: absolute;width: 96%;}
@@ -1097,21 +1402,21 @@
       #stringTextarea{width: 98%;min-height: 68px;font-size: 12px;}
       .fillFormInputWrap{display: flex;flex-direction: column;width: 100%;}
       .fillFormLi{margin-bottom: 6px;display: flex;width: 100%;}
-      .fillFormName,.fillFormInput{width: 100%;height: 20px;}
+      .pythonName,.fillFormName,.fillFormInput{width: 100%;height: 20px;}
       .fillFormColon{color: #fff;margin: 0 2px;line-height: 20px;}
 			.funcBtnWrap{display:flex;position: absolute;bottom: 8px;width: 100%;justify-content:space-between;}
 		  .elementListLi:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
 			.collapseBtn{user-select: none;width: 20px;height: 20px;transform: translate(0px, 10px);background: rgba(255,255,255,0.6);text-align: center;border-radius: 10px;color: #333;font-weight: bold;line-height: 20px;cursor: pointer;position: absolute;right: 2px;top: 25%;}
 			.siderBarUl{width: 100%;position:relative;padding: 0;padding-bottom: 78px;display: flex;flex-direction: column;}
 			.detailLi{display:flex;margin-bottom: 10px;border-bottom: 1px solid #eee;padding: 10px 0 5px 0;width: 100%;}
-			.detailLi input{width: 100%;}
 			.detailLi span{margin-right: 5px;color:#fff;text-align: right;white-space: nowrap;}
 			.collapsed{top: 50%;transform: translate(0px, -50%);right:8px;}
 			.fillFormBtn,.cancelBtn,.downloadBtn{flex:1;border-radius: 5px;font-size: 14px;background: #fff;text-align: center;height: 20px;line-height: 20px;margin: 0px 4px;cursor:pointer;}
 			.fillFormBtn:hover,.cancelBtn:hover,.downloadBtn:hover{box-shadow: 0px 0px 10px #0189fb;}
-			.emptyBox{color:#fff;margin-top: 20px;}
+			.emptyBox,.pythonEmptyBox{color:#fff;margin-top: 20px;}
 			.addInfoBtn{width: 50px;height: 20px;position: absolute;bottom: 6px;left: 50%;font-size: 20px;transform: translate(-50%, 0px);color: #fff;line-height: 20px;border-radius: 5px;background: #0189fb;text-align: center;cursor:pointer;}
-			.infoUl{width: 100%;padding: 0;display: flex;flex-direction: column;display:none;padding-bottom: 20px;}
+			.addPythonBtn{margin:20px auto;width: 50px;height: 20px;font-size: 20px;color: #fff;line-height: 20px;border-radius: 5px;background: #0189fb;text-align: center;cursor:pointer;}
+      .infoUl,.pythonUl{width: 100%;padding: 0;display: flex;flex-direction: column;display:none;padding-bottom: 20px;}
 			.elementListLi{background: #fff;list-style: none;height: 20px;line-height: 20px;padding-left: 10%;border-radius: 5px;margin-bottom: 10px;border: 0;cursor:pointer;border: 1px solid #fff;text-align:left;}
 			.tabsBtnWrap{display: flex;width: 100%;margin-bottom: 10px;justify-content: space-between;}
 			.tabsBtn:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
