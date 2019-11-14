@@ -129,8 +129,8 @@
     $("#inspectCurrentPython").click(function() {
       const ls = window.localStorage;
       let pythonString = ls.getItem("pythonObj");
-      alert(pythonString);
       let pythonObj = pythonString ? JSON.parse(pythonString) : {};
+      alert(pythonString);
       console.log(pythonObj);
     });
 
@@ -1393,17 +1393,18 @@
       // 导入css样式
       this.importCss = () => {
         const cssString = `
-      #clearBtn,#inspectCurrentPython{display:none;}
-      .selectBtn,.detailLi input{width:100%;}
+      #clearBtn,#inspectCurrentPython{display: none;}
+      .detailLi input{width: 100%;}
       .siderBarUlWrap{display:flex;}
-      .container{width:90%;}
+      .container{width: 90%;}
+      .selectBtn{width: 100%;background: #0189fb;color: #fff;cursor: pointer;border-radius: 4px;outline: none;border: 0;}
       #lineCancelBtn{display:none;z-index:10;position: absolute;width: 96%;}
-      .fillFormWrap{display:none;width:100%;}
-      .pythonWrap{display:none;width:100%;}
+      .fillFormWrap{display:none;width: 100%;}
+      .pythonWrap{display:none;width: 100%;}
       #stringTextarea{width: 98%;min-height: 68px;font-size: 12px;}
       .fillFormInputWrap{display: flex;flex-direction: column;width: 100%;}
-      .fillFormLi{margin-bottom: 6px;display: flex;width: 100%;}
-      .pythonName,.fillFormName,.fillFormInput{width: 100%;height: 20px;}
+      .fillFormLi{height: 22px;margin-bottom: 6px;display: flex;width: 100%;align-items: stretch;}
+      .pythonName,.fillFormName,.fillFormInput{width: 100%;outline: none;}
       .fillFormColon{color: #fff;margin: 0 2px;line-height: 20px;}
 			.funcBtnWrap{display:flex;position: absolute;bottom: 8px;width: 100%;justify-content:space-between;}
 		  .elementListLi:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
