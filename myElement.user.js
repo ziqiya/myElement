@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         我的元素
 // @namespace    https://github.com/RuanXuSong/myElement
-// @version      1.0
+// @version      1.2
 // @description  用于在页面中插入元素，改变元素样式用于展示
 // @author       Ruan Xusong
 // @match        http://*/*
 // @match        https://*/*
+// @license      MIT
 // @grant        none
 // @require      https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js
 // ==/UserScript==
