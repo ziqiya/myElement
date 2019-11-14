@@ -130,7 +130,8 @@
       const ls = window.localStorage;
       let pythonString = ls.getItem("pythonObj");
       alert(pythonString);
-      console.log(pythonString);
+      let pythonObj = pythonString ? JSON.parse(pythonString) : {};
+      console.log(pythonObj);
     });
 
     /**
