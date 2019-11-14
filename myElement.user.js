@@ -518,7 +518,7 @@
       this.showAttributes = el => {
         const nodeName = `${el.nodeName.toLowerCase()}`;
         // 单标签
-        const singleTags = ["img", "input"];
+        const singleTags = ["img", "input", "area"];
         const nodeNameDom = `<span style="font-weight:bold;">${nodeName}</span><br/>`;
         const attrArr = Array.from(el.attributes);
         const attributes = attrArr.reduce((attrs, attr) => {
