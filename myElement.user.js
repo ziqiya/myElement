@@ -205,6 +205,22 @@
     }
 
     /**
+     * @功能描述: 点击发送请求
+     * @参数:
+     * @返回值:
+     */
+    $("#sendPython").click(function() {
+      const pythonKey = window.localStorage.getItem("pythonObj");
+      // 发送请求
+      $.get(
+        `http://api.dev.thundersdata.com/da-backend/reback?key=${pythonKey}`,
+        function(data) {
+          alert("data: " + JSON.stringify(data));
+        }
+      );
+    });
+
+    /**
      * @功能描述: 点击python下载按钮
      * @参数:
      * @返回值:
@@ -1069,15 +1085,16 @@
                 <div id="downloadBtn" class="downloadBtn">下载样式</div>
                 <div id="cancelBtn" class="cancelBtn">删除元素</div>
                 
-                <div id="pythonDownload" class="downloadBtn" style="display:none">下载Python</div>
+                <div id="pythonDownload" class="downloadBtn"">下载Python</div>
                 <div id="clearBtn" class="cancelBtn">清空Python</div>
+
+                
                 <div id="lineCancelBtn" class="cancelBtn">点击取消画线</div>
               </div>
               <div class="funcBtnWrap" style="bottom:34px">
                 <div id="fillFormBtn" class="fillFormBtn">一键填充表单</div>
-              </div>
-              <div class="funcBtnWrap" style="bottom:34px">
-                <div id="inspectCurrentPython" class="fillFormBtn">查看console当前Python</div>
+                <div id="inspectCurrentPython" class="downloadBtn">查看Python</div>
+                <div id="sendPython" class="downloadBtn">发送Python</div>
               </div>
               <div class="funcBtnWrap">
                 <div id="pythonBtn" class="fillFormBtn">自动生成爬虫</div>
@@ -1228,32 +1245,26 @@
        */
       this.pythonForm = () => {
         const _this = this;
-        $(".pythonWrap").show();
-        $("#clearBtn").show();
-        $("#inspectCurrentPython").show();
-        $("#fillFormBtn").hide();
-        $("#cancelBtn").hide();
-        $("#downloadBtn").hide();
-        $("#pythonDownload").show();
+        $(
+          ".fillFormWrap,#fillFormBtn,#cancelBtn,#downloadBtn,.elementListLi"
+        ).hide();
+        $(
+          ".pythonWrap,#clearBtn,#inspectCurrentPython,#pythonDownload,#sendPython"
+        ).show();
         $("#pythonBtn").addClass("pythonFormActive");
         $("#pythonBtn")
           .text("退出python模式")
           .click(function() {
-            $("#downloadBtn").show();
-            $("#pythonDownload").hide();
+            $(
+              "#pythonDownload,.pythonWrap,#clearBtn,#inspectCurrentPython,#sendPython"
+            ).hide();
+            $("#downloadBtn,.elementListLi,#fillFormBtn,#cancelBtn").show();
             $("#pythonBtn").text("自动生成爬虫");
-            $(".elementListLi").show();
-            $(".pythonWrap").hide();
-            $("#clearBtn").hide();
-            $("#inspectCurrentPython").hide();
-            $("#fillFormBtn").show();
-            $("#cancelBtn").show();
             $(this).removeClass("pythonFormActive");
             $(this).click(function() {
               _this.pythonForm();
             });
           });
-        $(".elementListLi").hide();
       };
 
       /**
@@ -1394,7 +1405,7 @@
       // 导入css样式
       this.importCss = () => {
         const cssString = `
-      #clearBtn,#inspectCurrentPython{display: none;}
+      #clearBtn,#inspectCurrentPython,#sendPython,#pythonDownload{display: none;}
       .detailLi input{width: 100%;}
       .siderBarUlWrap{display:flex;}
       .container{width: 90%;}

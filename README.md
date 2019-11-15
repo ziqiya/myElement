@@ -4,7 +4,7 @@
  * @作者: 阮旭松
  * @Date: 2019-08-17 17:58:52
  * @LastEditors: 阮旭松
- * @LastEditTime: 2019-11-14 11:55:23
+ * @LastEditTime: 2019-11-15 10:31:08
  -->
 
 # myElement
@@ -35,10 +35,11 @@
 ### 3.自动生成 python
 
 - 1.点击”自动生成爬虫“按钮，进入 python 模式，此时可以点击加号新增 python 键值对,在左边 input 中先输入 name，再点击右边的请选择按钮可以选择选中的元素，在滑过的时候可以看到当前元素的信息。
-- 2.点击“查看 console 当前 Python”按钮可以在弹窗中看到当前已有的 python 字符串，在 console 控制台中可以看到 python 的 json。
-- 3.点击“清空 Python”可以清空之前已选的 Python 字符串。
-- 4.点击“下载 Python”可以下载当前已选的 Python 字符串并存到本地。
-- 5.点击“退出 Python 模式”可以退出 python 模式。
+- 2.点击“查看 Python”按钮可以在弹窗中看到当前已有的 python 字符串，在 console 控制台中可以看到 python 的 json。
+- 3.点击“发送 Python”按钮可以发送 Python 字符串请求给后端。
+- 4.点击“清空 Python”可以清空之前已选的 Python 字符串。
+- 5.点击“下载 Python”可以下载当前已选的 Python 字符串并存到本地。
+- 6.点击“退出 Python 模式”可以退出 python 模式。
 
 ### 4.一键填充表单
 
