@@ -429,6 +429,7 @@
     function AttrFunc(datePoint) {
       this.selectedDom = "";
       this.domAlertId = "spyon-container";
+      this.areaWrapId = "area-wrap-container";
       this.posBuffer = 3;
       this.appendInputLi = () => {
         let inputLi = `<li class="detailLi ${datePoint}"><input id='cssType${datePoint}'/><div class="fillFormColon">:</div><input cssType='' id='input${datePoint}'/></li>`;
@@ -455,7 +456,9 @@
       /** python-创造监听样式弹窗 */
       this.pythonCreate = () => {
         const div = document.createElement("div");
+        const areaWrap = document.createElement("div");
         div.id = this.domAlertId;
+        areaWrap.id = this.areaWrapId;
         div.setAttribute(
           "style",
           `
@@ -476,12 +479,30 @@
       text-align: left;
       `
         );
+        areaWrap.setAttribute(
+          "style",
+          `
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: auto;
+      height: auto;
+      padding: 0px;
+      box-sizing: border-box;
+      background-color: rgba(0,0,0,0.3);
+      z-index: -10;
+      border-radius: 5px;
+      border:1px solid #ddd;
+      `
+        );
+        document.body.appendChild(areaWrap);
         document.body.appendChild(div);
       };
 
       /** python-显示弹窗 */
       this.pythonShow = e => {
         const spyContainer = document.getElementById(this.domAlertId);
+        const wrapContainer = document.getElementById(this.areaWrapId);
         if (!spyContainer) {
           this.pythonCreate();
           return;
@@ -489,11 +510,15 @@
         if (spyContainer.style.display !== "block") {
           spyContainer.style.display = "block";
         }
+        if (wrapContainer.style.display !== "block") {
+          wrapContainer.style.display = "block";
+        }
       };
 
       /** python-隐藏弹窗 */
       this.pythonHide = e => {
         document.getElementById(this.domAlertId).style.display = "none";
+        document.getElementById(this.areaWrapId).style.display = "none";
       };
 
       /** python-获得srcoll的宽度高度 */
@@ -515,13 +540,26 @@
       /** python-滑过元素 */
       this.pythonGlide = e => {
         const spyContainer = document.getElementById(this.domAlertId);
+        const wrapContainer = document.getElementById(this.areaWrapId);
         if (!spyContainer) {
           this.pythonCreate();
           return;
         }
         const left = e.clientX + this.getScrollPos().left + this.posBuffer;
         const top = e.clientY + this.getScrollPos().top + this.posBuffer;
+        const wrapLeft =
+          e.target.getBoundingClientRect().left +
+          document.documentElement.scrollLeft;
+        const wrapTop =
+          e.target.getBoundingClientRect().top +
+          document.documentElement.scrollTop;
+        const wrapWidth = e.target.offsetWidth;
+        const wrapHeight = e.target.offsetHeight;
         spyContainer.innerHTML = this.showAttributes(e.target);
+        wrapContainer.style.left = wrapLeft + "px";
+        wrapContainer.style.top = wrapTop + "px";
+        wrapContainer.style.width = wrapWidth + "px";
+        wrapContainer.style.height = wrapHeight + "px";
         if (left + spyContainer.offsetWidth > window.innerWidth) {
           spyContainer.style.left = left - spyContainer.offsetWidth + "px";
         } else {
@@ -602,6 +640,7 @@
         document.body.removeEventListener("mouseleave", this.pythonHide);
         document.body.removeEventListener("mousedown", this.selectPythonDom);
         document.getElementById(this.domAlertId).style.display = "none";
+        document.getElementById(this.areaWrapId).style.display = "none";
       };
 
       /**
@@ -1054,7 +1093,7 @@
       // 侧边栏div
       this.siderBarHtml = `
       <div id="siderBar">
-        <div class="container">
+        <div class="myelement-container">
           <div class="tabsBtnWrap">
             <div class="tabsBtn active">元素</div>
             <div class="tabsBtn">属性</div>
@@ -1408,7 +1447,7 @@
       #clearBtn,#inspectCurrentPython,#sendPython,#pythonDownload{display: none;}
       .detailLi input{width: 100%;}
       .siderBarUlWrap{display:flex;}
-      .container{width: 90%;}
+      .myelement-container{width: 90%;}
       .selectBtn{width: 100%;background: #0189fb;color: #fff;cursor: pointer;border-radius: 4px;outline: none;border: 0;}
       #lineCancelBtn{display:none;z-index:10;position: absolute;width: 96%;}
       .fillFormWrap{display:none;width: 100%;}
