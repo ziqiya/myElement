@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         我的元素
+// @name         python生成器
 // @namespace    https://github.com/RuanXuSong/myElement
 // @version      1.2
-// @description  用于在页面中插入元素，改变元素样式用于展示
+// @description  用于生成python，发送给后端python字段
 // @author       Ruan Xusong
 // @match        http://*/*
 // @match        https://*/*
@@ -787,7 +787,7 @@
         // 若为禁用跳转
         if (this.hrefFlag) {
           this.hrefFlag = false;
-          $("#hrefBtn").text("禁止跳转链接");
+          $("#hrefBtn").text("禁止跳转");
         } else {
           this.hrefFlag = true;
           $("#hrefBtn").text("允许跳转");
