@@ -48,6 +48,8 @@
           "position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;"
       }
     ];
+    // 全局的cardItem对象
+    let domObj = {};
     /**
      * @功能描述: 初始化元素
      * @参数:
@@ -201,43 +203,96 @@
       return str;
     }
 
-    /** 取三个dom数组公共项 */
-    function intersect(dom1, dom2, dom3) {
-      function getCommonArr(arr1, arr2) {
-        return arr1.filter(function(num) {
-          return Array.from(arr2).indexOf(num) !== -1;
-        });
-      }
-      const tempArr = getCommonArr(dom1, dom2);
-      const commonArr = getCommonArr(tempArr, dom3);
-      return commonArr;
+    /** 取两个dom数组公共项 */
+    function intersect(dom1, dom2) {
+      return dom1.filter(function(num) {
+        return Array.from(dom2).indexOf(num) !== -1;
+      });
+    }
+
+    /** 获得node的string，参数:jquery节点 */
+    function getNodeString(jqNode) {
+      const nodeName = jqNode.nodeName.toLowerCase();
+      const singleTags = ["img", "input", "area"];
+      const attrArr = Array.from(jqNode.attributes);
+      const attributes = attrArr.reduce((attrs, attr) => {
+        attrs += `${attr.nodeName}="${attr.nodeValue}" `;
+        return attrs;
+      }, "");
+      const nodeString = `<${nodeName} ${attributes}> ${
+        !singleTags.includes(nodeName) ? `</${nodeName}>` : ""
+      }`;
+      return nodeString;
     }
 
     /** 拿到dom最小公共祖宗 */
-    function getCommonParent(event1, event2, event3) {
+    function getCommonParent(event1, event2) {
       const dom1 = $(event1.target);
       const dom2 = $(event2.target);
-      const dom3 = $(event3.target);
       const parents1 = Array.from(dom1.parents());
       // 包括dom1本身
       parents1.unshift(dom1[0]);
       const parents2 = Array.from(dom2.parents());
       // 包括dom2本身
       parents2.unshift(dom2[0]);
-      const parents3 = Array.from(dom3.parents());
-      // 包括dom3本身
-      parents3.unshift(dom3[0]);
-      const common = intersect(parents1, parents2, parents3)[0];
-      const selectListDom = common.innerHTML;
-      const firstSelect = dom1.parentsUntil($(common))[0].innerHTML;
-      const secondSelect = dom2.parentsUntil($(common))[0].innerHTML;
-      const lastSelect = dom3.parentsUntil($(common))[0].innerHTML;
+      const common = intersect(parents1, parents2)[0];
+      const selectListDom = getNodeString(common);
+      const firstSelect = dom1.parentsUntil($(common))[0]
+        ? getNodeString(dom1.parentsUntil($(common))[0])
+        : getNodeString(dom1);
+      const lastSelect = dom2.parentsUntil($(common))[0]
+        ? getNodeString(dom2.parentsUntil($(common))[0])
+        : getNodeString(dom2);
       return {
         selectListDom,
         firstSelect,
-        secondSelect,
         lastSelect
       };
+    }
+
+    /** 取card本身，并加入index，card->url的上级信息 */
+    function getCardAndIndex(el) {
+      // 鼠标事件
+      const firstSelect = domObj.firstSelect;
+      const lastSelect = domObj.lastSelect;
+      const urlDom = $(el.target);
+      const urlNodeName = urlDom[0].nodeName.toLowerCase();
+      if (!firstSelect) {
+        alert("请先选择第一个cardItem!");
+        return {};
+      }
+      if (!lastSelect) {
+        alert("请先选择最后一个cardItem!");
+        return {};
+      }
+      // 获取选择的第一个，第二个listDom
+      const dom1 = $(firstSelect.target);
+      const dom2 = $(lastSelect.target);
+      const parents1 = Array.from(dom1.parents());
+      // 包括dom1本身
+      parents1.unshift(dom1[0]);
+      const parents2 = Array.from(dom2.parents());
+      // 包括dom2本身
+      parents2.unshift(dom2[0]);
+      const common = intersect(parents1, parents2)[0];
+      // 获取其在父级中的index
+      const index = urlDom
+        .parent()
+        .children(urlNodeName)
+        .index(urlDom);
+      // url的dom本身的数组
+      const urlDomArr = Array.from(urlDom);
+      // 获取所有card到url元素到中间级
+      const rangeArr = Array.from(urlDom.parentsUntil($(common)))
+        .reverse()
+        .concat(urlDomArr);
+      let domString = "";
+      rangeArr.forEach(item => {
+        const nodeString = getNodeString(item);
+        domString += nodeString;
+      });
+      const cardInfoItem = getNodeString(rangeArr.pop());
+      return { pyDomString: domString, pyIndex: index, cardInfoItem };
     }
 
     /** 将html转换为可以存储的片段,替换<>间的"为' */
@@ -250,6 +305,32 @@
     }
 
     /**
+     * @功能描述: 获得url中的传参
+     * @参数: name(指定项的key值)
+     * @返回值: 若有name，则返回指定项的value，若没有name则返回一个query的json
+     */
+    function getUrlQuery(name) {
+      let after = window.location.search || window.location.hash;
+      after = after ? after.split("?")[1] : "";
+      const query = {};
+      const strs = after ? after.split("&") : [];
+      for (let i = 0; i < strs.length; i++) {
+        const keyValueMaps = strs[i] ? strs[i].split("=") : [];
+        if (keyValueMaps.length === 2) {
+          query[keyValueMaps[0]] = decodeURIComponent(keyValueMaps[1]);
+        } else if (keyValueMaps[0]) {
+          query[keyValueMaps[0]] = null;
+        }
+      }
+
+      if (name && typeof name !== "object") {
+        return query[name];
+      }
+
+      return query;
+    }
+
+    /**
      * @功能描述: 点击发送请求
      * @参数:
      * @返回值:
@@ -258,19 +339,10 @@
       const pythonKey = window.localStorage.getItem("pythonObj");
       let oldPythonObj = pythonKey ? JSON.parse(pythonKey) : {};
       const firstSelect = oldPythonObj.firstSelect;
-      const secondSelect = oldPythonObj.secondSelect;
       const lastSelect = oldPythonObj.lastSelect;
       const pythonType = $("#pythonType").val();
-      if (!pythonType) {
-        alert("请选择python类型！");
-        return;
-      }
       if (!firstSelect) {
         alert("请选择第一个cardItem！");
-        return;
-      }
-      if (!secondSelect) {
-        alert("请选择第二个cardItem！");
         return;
       }
       if (!lastSelect) {
@@ -279,7 +351,7 @@
       }
       // 发送请求
       $.post(
-        `http://192.168.1.92:5000/card`,
+        `http://192.168.1.116:5000/card`,
         {
           need_data_list: [
             {
@@ -294,6 +366,126 @@
           alert("data: " + JSON.stringify(data));
         }
       );
+    });
+
+    /**
+     * @功能描述: 发送测试请求
+     * @参数:
+     * @返回值:
+     */
+    $(".testBtn").click(function() {
+      const pythonKey = window.localStorage.getItem("pythonObj");
+      let oldPythonObj = pythonKey ? JSON.parse(pythonKey) : {};
+      const page = oldPythonObj.pageDom;
+      const url = window.location.href;
+      const hash = getUrlQuery("thundersData");
+      const type = $(this).attr("id");
+      const requestUrl = "http://192.168.1.116:5000";
+      // 非分页详情的字段
+      const infoOtherArr = [
+        "firstSelect",
+        "secondSelect",
+        "url",
+        "lastSelect",
+        "selectListDom",
+        "cardUrl",
+        "pageDom",
+        "infoUrl",
+        "pyDomString",
+        "pyIndex",
+        "cardInfoItem"
+      ];
+      // 分页详情的name字段list
+      const pageInfoNames = Object.keys(oldPythonObj).filter(item => {
+        return !infoOtherArr.includes(item);
+      });
+      switch (type) {
+        case "cardItemTest":
+          const firstSelect = oldPythonObj.firstSelect;
+          const lastSelect = oldPythonObj.lastSelect;
+          const selectListDom = oldPythonObj.selectListDom;
+          const pyDomString = oldPythonObj.pyDomString;
+          const pyIndex = oldPythonObj.pyIndex;
+          const cardInfoItem = oldPythonObj.cardInfoItem;
+          $.ajax({
+            url: `${requestUrl}/card`,
+            type: "post",
+            dateType: "json",
+            headers: {
+              "Content-Type": "application/json;charset=utf8"
+            },
+            data: JSON.stringify({
+              need_data_list: [
+                {
+                  need_column: cardInfoItem,
+                  need_type: "url",
+                  need_tag: pyDomString,
+                  need_tag_index: pyIndex
+                }
+              ],
+              card_list: [firstSelect, lastSelect],
+              start_url: url,
+              root: selectListDom,
+              hash: hash
+            }),
+            success: function(data) {
+              alert(JSON.stringify(data.data));
+            },
+            error: function(data) {
+              alert("请求错误!");
+            }
+          });
+          break;
+        case "pageTest":
+          $.ajax({
+            url: `${requestUrl}/page`,
+            type: "post",
+            dateType: "json",
+            headers: {
+              "Content-Type": "application/json;charset=utf8"
+            },
+            data: JSON.stringify({
+              page,
+              page_url: url,
+              hash: hash
+            }),
+            success: function(data) {
+              alert(JSON.stringify(data.data));
+            },
+            error: function(data) {
+              alert("请求错误!");
+            }
+          });
+          break;
+        case "pageInfoTest":
+          const dataList = pageInfoNames.map(name => ({
+            need_column: name,
+            need_type: "string",
+            need_tag: oldPythonObj[name]
+          }));
+          $.ajax({
+            url: `${requestUrl}/info`,
+            type: "post",
+            dateType: "json",
+            headers: {
+              "Content-Type": "application/json;charset=utf8"
+            },
+            data: JSON.stringify({
+              need_data_list: dataList,
+              info_url: url,
+              hash: hash
+            }),
+            success: function(data) {
+              alert(JSON.stringify(data.data));
+            },
+            error: function(data) {
+              alert("请求错误!");
+            }
+          });
+          break;
+        default:
+          break;
+      }
     });
 
     /**
@@ -516,7 +708,6 @@
      */
     function AttrFunc(datePoint) {
       this.selectedDom = "";
-      this.domObj = {};
       this.idx = 0;
       this.innerFlag = false;
       this.domAlertId = "spyon-container";
@@ -528,18 +719,18 @@
       };
       this.appendPythonInput = () => {
         let inputLi = `<li class="fillFormLi ${datePoint}"><input id='pythonTitle${datePoint}' class="pythonName"/><div class="fillFormColon">:</div><button class="selectBtn" id='pythonDom${datePoint}'>请选择</button></li>`;
-        $(".pythonUl").append(inputLi);
+        $(".pageInfoUl").append(inputLi);
         $(".pythonEmptyBox").hide();
       };
 
       /** 新增默认python字段 */
-      this.appendInitialInput = selectArr => {
+      this.appendInitialInput = (type, selectArr) => {
         const _this = this;
         if (selectArr.length > 0) {
           selectArr.forEach(({ name, label }, idx) => {
             const modifiedDatePoint = datePoint + idx;
             let inputLi = `<div class="fillFormLabel">${label}:</div><li class="fillFormLi ${modifiedDatePoint}"><input id='pythonTitle${modifiedDatePoint}' value="${name}" disabled class="pythonName"/><div class="fillFormColon">:</div><button class="selectBtn" id='pythonDom${modifiedDatePoint}'>请选择</button></li>`;
-            $(".pythonUl").append(inputLi);
+            $(`.${type}Ul`).append(inputLi);
             $(".pythonEmptyBox").hide();
             // Dom选择内容点击事件
             $(`#pythonDom${modifiedDatePoint}`).click(function() {
@@ -551,55 +742,31 @@
       };
 
       /**
-       * @功能描述: python下拉type改变事件
+       * @功能描述: python初始化
        * @参数:
        * @返回值:
        */
-
       this.pythonTypeChange = type => {
-        // 清空表单项和label
-        $(".pythonUl .fillFormLi,.fillFormLabel").remove();
         let pythonSelect = [];
         switch (type) {
           case "cardItem":
-            this.innerFlag = false;
             pythonSelect = [
               { name: "firstSelect", label: "第一个cardItem" },
-              { name: "secondSelect", label: "第二个cardItem" },
               { name: "lastSelect", label: "最后一个cardItem" }
             ];
-
             break;
           case "cardInfo":
-            this.innerFlag = false;
-            pythonSelect = [
-              { name: "title", label: "标题" },
-              { name: "url", label: "链接" }
-            ];
+            pythonSelect = [{ name: "cardUrl", label: "链接" }];
             break;
           case "page":
-            this.innerFlag = true;
             pythonSelect = [{ name: "pageDom", label: "分页器" }];
             break;
           case "pageInfo":
-            this.innerFlag = false;
             break;
           default:
             break;
         }
-        this.appendInitialInput(pythonSelect);
-      };
-
-      /**
-       * @功能描述: python字段name改变事件
-       * @参数:
-       * @返回值:
-       */
-      this.pythonNameChange = function() {
-        const ls = window.localStorage;
-        $(`#pythonDom${datePoint}`).attr("pythonName", $(this).val());
-        if ($(`#pythonDom${datePoint}`).attr("pythonType") !== "") {
-        }
+        this.appendInitialInput(type, pythonSelect);
       };
 
       /** python-创造监听样式弹窗 */
@@ -725,7 +892,7 @@
         const nodeNameDom = `<span style="font-weight:bold;">${nodeName}</span><br/>`;
         const attrArr = Array.from(el.attributes);
         const attributes = attrArr.reduce((attrs, attr) => {
-          attrs += `${attr.nodeName}='${attr.nodeValue}' `;
+          attrs += `${attr.nodeName}="${attr.nodeValue}" `;
           return attrs;
         }, "");
         const attributesDom = attrArr.reduce((attrs, attr) => {
@@ -748,7 +915,7 @@
         const index = this.idx || 0;
         const ls = window.localStorage;
         const name = $(`#pythonTitle${datePoint + index}`).val();
-        const itemArr = ["firstSelect", "secondSelect", "lastSelect"];
+        const itemArr = ["firstSelect", "lastSelect"];
         this.idx = 0;
         // 移除监听事件
         this.removePythonListen();
@@ -759,23 +926,23 @@
             ? JSON.parse(ls.getItem("pythonObj"))
             : {};
           if (itemArr.includes(name)) {
-            this.domObj[name] = el;
+            domObj[name] = el;
           }
           // 获取公共最小祖先
-          if (
-            this.domObj.firstSelect &&
-            this.domObj.secondSelect &&
-            this.domObj.lastSelect
-          ) {
+          if (domObj.firstSelect && domObj.lastSelect) {
             oldPythonObj = {
               ...oldPythonObj,
-              ...getCommonParent(
-                this.domObj.firstSelect,
-                this.domObj.secondSelect,
-                this.domObj.lastSelect
-              )
+              ...getCommonParent(domObj.firstSelect, domObj.lastSelect)
             };
           }
+          // 如果是card中的URL，取card本身，并加入index，card->url的上级信息
+          if (name === "cardUrl") {
+            oldPythonObj = {
+              ...oldPythonObj,
+              ...getCardAndIndex(el)
+            };
+          }
+
           ls.setItem(
             "pythonObj",
             JSON.stringify({
@@ -1285,16 +1452,22 @@
               </div>
                <div class="pythonWrap">
                 <div class="fillFormInputWrap">
-                  <select id="pythonType">
-                    <option value="">请选择python字段类型</option>
-                    <option value="cardItem">cardItem</option>
-                    <option value="cardInfo">cardInfo</option>
-                    <option value="page">page</option>
-                    <option value="pageInfo">pageInfo</option>
-                  </select>
-                  <div class="pythonUl" style="display:block">
-                  </div>
-                  <div class="pythonEmptyBox">
+                  <div class="sectionTitle">cardItem</div>
+                    <div class="cardItemUl pythonUl">
+                    </div>
+                  <div class="sectionTitle">cardInfo</div>
+                    <div class="cardInfoUl pythonUl">
+                    </div>
+                    <button id="cardItemTest" class="testBtn">测试cardList</button>
+                  <div class="sectionTitle">page</div>
+                    <div class="pageUl pythonUl">
+                    </div>
+                    <button id="pageTest" class="testBtn">测试page</button>
+                  <div class="sectionTitle">pageInfo</div>
+                    <div class="pageInfoUl pythonUl">
+                    </div>
+                    <button id="pageInfoTest" class="testBtn">测试pageInfo</button>
+                  <div class="pythonEmptyBox" style="display:none">
                     当前python为空，请先选择python字段类型，再点击新建，选择对应dom元素!
                   </div>
                   <div class="addPythonBtn">+</div>
@@ -1306,7 +1479,6 @@
                 
                 <div id="pythonDownload" class="downloadBtn"">下载Python</div>
                 <div id="clearBtn" class="cancelBtn">清空Python</div>
-
                 
                 <div id="lineCancelBtn" class="cancelBtn">点击取消画线</div>
               </div>
@@ -1316,11 +1488,10 @@
                 <div id="sendPython" class="downloadBtn">发送Python</div>
               </div>
               <div class="funcBtnWrap">
-                <div id="hrefBtn" class="fillFormBtn">禁用跳转</div>
-                <div id="pythonBtn" class="fillFormBtn">生成Python</div>
+                <div id="hrefBtn" class="fillFormBtn">允许跳转链接</div>
               </div>
             </ul>
-            <ul class="infoUl">
+            <ul class="infoUl" style="display:none">
               <div class="emptyBox">
                 当前属性为空，请先新建实例元素，再双击选择添加属性!
               </div>
@@ -1347,6 +1518,23 @@
         this.importCss();
         // 初始关闭状态
         this.toggleCollapse();
+
+        // 禁用跳转
+        this.hrefToggle();
+        // 默认进入python页面
+        this.pythonForm();
+        // 初始化所有python下拉
+        this.initialPython();
+      };
+
+      /** 初始化所有python下拉 */
+      this.initialPython = () => {
+        const typeArr = ["cardItem", "cardInfo", "page", "pageInfo"];
+        typeArr.forEach(item => {
+          const datePoint = new Date().getTime() + item;
+          const attrFunc = new AttrFunc(datePoint);
+          attrFunc.pythonTypeChange(item);
+        });
       };
 
       /**
@@ -1359,10 +1547,10 @@
         // 若为禁用跳转
         if (this.hrefFlag) {
           this.hrefFlag = false;
-          $("#hrefBtn").text("禁用跳转");
+          $("#hrefBtn").text("禁止跳转链接");
         } else {
           this.hrefFlag = true;
-          $("#hrefBtn").text("启用跳转");
+          $("#hrefBtn").text("允许跳转链接");
         }
         $("a").click(function(e) {
           if (!_this.hrefFlag) {
@@ -1616,20 +1804,19 @@
         // 若已经折叠，则打开
         if ($(".collapseBtn").hasClass("collapsed")) {
           $(".collapseBtn").removeClass("collapsed");
-          $(".collapseBtn").text("<");
+          $(".collapseBtn").text(">");
           $("#siderBar").css({
-            left: "0px",
-            "min-height": "200px",
-            height: "auto"
+            right: "0px",
+            height: "100%"
           });
           $(".tabsBtnWrap").show();
           $(".siderBarUlWrap").show();
         } else {
           // 若未折叠，则折叠
           $(".collapseBtn").addClass("collapsed");
-          $(".collapseBtn").text(">");
+          $(".collapseBtn").text("<");
           $("#siderBar").css({
-            left: "-184px",
+            right: "-184px",
             "min-height": "unset",
             height: "40px"
           });
@@ -1650,39 +1837,41 @@
       this.importCss = () => {
         const cssString = `
       .detailLi input{width: 100%;}
+      .sectionTitle{display:flex;font-size: 18px;font-weight: bold;margin-bottom: 8px;margin-top: 8px;justify-content:space-between;}
       #clearBtn,#inspectCurrentPython,#sendPython,#pythonDownload{display: none;}
       #pythonType{margin-bottom: 10px;outline: none;height: 22px;}
       .fillFormLabel{text-align: left;margin-bottom: 8px;}
       .siderBarUlWrap{display:flex;}
-      .myelement-container{width: 90%;}
-      .selectBtn{width: 100%;background: #0189fb;color: #fff;cursor: pointer;border-radius: 4px;outline: none;border: 0;}
+      .myelement-container{width: 90%;margin-left: 10%;}
+      .testBtn{margin-bottom: 10px;}
+      .selectBtn,.testBtn{width: 100%;background: #0189fb;color: #fff;cursor: pointer;border-radius: 4px;outline: none;border: 0;}
       #lineCancelBtn{display:none;z-index:10;position: absolute;width: 96%;}
       .fillFormWrap{display:none;width: 100%;}
       .pythonWrap{display:none;width: 100%;}
       #stringTextarea{width: 98%;min-height: 68px;font-size: 12px;}
       .fillFormInputWrap{display: flex;flex-direction: column;width: 100%;}
       .fillFormLi{height: 22px;margin-bottom: 6px;display: flex;width: 100%;align-items: stretch;}
-      .pythonName,.fillFormName,.fillFormInput{width: 100%;outline: none;}
+      .pythonName,.fillFormName,.fillFormInput{width: 100%;outline: none;padding-left: 4px;}
       .fillFormColon{color: #fff;margin: 0 2px;line-height: 20px;}
 			.funcBtnWrap{display:flex;position: absolute;bottom: 8px;width: 100%;justify-content:space-between;}
 		  .elementListLi:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
-			.collapseBtn{user-select: none;width: 20px;height: 20px;transform: translate(0px, 10px);background: rgba(255,255,255,0.6);text-align: center;border-radius: 10px;color: #333;font-weight: bold;line-height: 20px;cursor: pointer;position: absolute;right: 2px;top: 25%}
+			.collapseBtn{user-select: none;width: 20px;height: 20px;transform: translate(0px, 10px);background: rgba(255,255,255,0.6);text-align: center;border-radius: 10px;color: #333;font-weight: bold;line-height: 20px;cursor: pointer;position: absolute;left: 6px;top: 25%}
 			.siderBarUl{width: 100%;position:relative;padding: 0;padding-bottom: 78px;display: flex;flex-direction: column;}
 			.detailLi{display:flex;margin-bottom: 10px;border-bottom: 1px solid #eee;padding: 10px 0 5px 0;width: 100%;}
 			.detailLi span{margin-right: 5px;color:#fff;text-align: right;white-space: nowrap;}
-			.collapsed{top: 50%;transform: translate(0px, -50%);right:8px;}
+			.collapsed{top: 50%;transform: translate(0px, -50%);left:8px;}
 			.fillFormBtn,.cancelBtn,.downloadBtn{flex:1;border-radius: 5px;font-size: 14px;background: #fff;text-align: center;height: 20px;line-height: 20px;margin: 0px 4px;cursor:pointer;white-space:nowrap;}
 			.fillFormBtn:hover,.cancelBtn:hover,.downloadBtn:hover{box-shadow: 0px 0px 10px #0189fb;}
 			.emptyBox,.pythonEmptyBox{color:#fff;margin-top: 20px;}
 			.addInfoBtn{width: 50px;height: 20px;position: absolute;bottom: 6px;left: 50%;font-size: 20px;transform: translate(-50%, 0px);color: #fff;line-height: 20px;border-radius: 5px;background: #0189fb;text-align: center;cursor:pointer;}
 			.addPythonBtn{margin:20px auto;width: 50px;height: 20px;font-size: 20px;color: #fff;line-height: 20px;border-radius: 5px;background: #0189fb;text-align: center;cursor:pointer;}
-      .infoUl,.pythonUl{width: 100%;padding: 0;display: flex;flex-direction: column;display:none;padding-bottom: 20px;}
+      .infoUl,.pythonUl{width: 100%;padding: 0;display: flex;flex-direction: column;padding-bottom: 8px;}
 			.elementListLi{background: #fff;list-style: none;height: 20px;line-height: 20px;padding-left: 10%;border-radius: 5px;margin-bottom: 10px;border: 0;cursor:pointer;border: 1px solid #fff;text-align:left;}
 			.tabsBtnWrap{display: flex;width: 100%;margin-bottom: 10px;justify-content: space-between;}
 			.tabsBtn:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
 			.tabsBtn{color:#0189fb;border: 1px solid #fff;text-align:center;width:48%;flex: 1;background: #fff;border-radius: 5px 5px 0 0;cursor:pointer;}
 			.tabsBtnWrap .active{color:#fff;background:#0189fb;border: 1px solid #0189fb;}
-			#siderBar{overflow: hidden;flex-direction: column;z-index:1000;background: rgba(0,0,0,0.3);position: fixed;left: 0;top: 10%;width: 200px;padding-bottom: 60px;border-radius: 0 5px 5px 0;padding: 10px;display:flex;transition:all 0.3s ease}`;
+			#siderBar{height: 100%;overflow: hidden;flex-direction: column;z-index:1000;background: rgba(0,0,0,0.3);position: fixed;right: 0;top: 0;width: 200px;padding-bottom: 60px;border-radius: 0 5px 5px 0;padding: 10px;display:flex;transition:all 0.3s ease}`;
         var style = document.createElement("style");
         style.type = "text/css";
         if (style.stylesheet) {
