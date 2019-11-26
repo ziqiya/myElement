@@ -16,14 +16,14 @@
   $.noConflict(); // 兼容网页中$
   // dom加载完成后，运行jquery函数域
   jQuery(document).ready(function($) {
-    // 元素列表(注:initialStyle中不可有空格)
+    //元素列表((注: initialStyle中不可有空格));
     const myElementsList = [
       {
         name: "div",
         content: "",
         type: "div",
         initialStyle:
-          "position:fixed;left:50%;top:50%;width:100px;height:100px;background:#0189fb;z-index:100;cursor:pointer;"
+          "display:flex;justify-content:center;position:fixed;align-items:center;font-size:20px;left:50%;top:50%;width:100px;height:100px;background:#0189fb;z-index:100;cursor:pointer;"
       },
       {
         name: "button",
@@ -780,6 +780,9 @@
         // 默认样式表
         const initialList = [
           "text",
+          "display",
+          "justify-content",
+          "align-items",
           "color",
           "width",
           "height",
@@ -820,6 +823,7 @@
         // 获得初始化样式
         const initialStyleString = $(__this)[0].target.style.cssText;
         let styleArr = initialStyleString.split(";");
+        console.log("styleArr: ", styleArr);
         styleArr = styleArr.map(item => item.split(":"));
         // 批量存储初始化样式
         styleArr.map(([cssType, value]) => {
@@ -1414,7 +1418,8 @@
           $("#siderBar").css({
             left: "0px",
             "min-height": "200px",
-            height: "auto"
+            height: "auto",
+            top: "0px"
           });
           $(".tabsBtnWrap").show();
           $(".siderBarUlWrap").show();
@@ -1476,7 +1481,7 @@
 			.tabsBtn:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
 			.tabsBtn{color:#0189fb;border: 1px solid #fff;text-align:center;width:48%;flex: 1;background: #fff;border-radius: 5px 5px 0 0;cursor:pointer;}
 			.tabsBtnWrap .active{color:#fff;background:#0189fb;border: 1px solid #0189fb;}
-			#siderBar{overflow: hidden;flex-direction: column;z-index:1000;background: rgba(0,0,0,0.3);position: fixed;left: 0;top: 10%;width: 200px;padding-bottom: 60px;border-radius: 0 5px 5px 0;padding: 10px;display:flex;transition:all 0.3s ease}`;
+			#siderBar{overflow: hidden;flex-direction: column;z-index:1000;background: rgba(0,0,0,0.3);position: fixed;left: 0;top: 0;width: 200px;padding-bottom: 60px;border-radius: 0 5px 5px 0;padding: 10px;display:flex;transition:all 0.3s ease}`;
         var style = document.createElement("style");
         style.type = "text/css";
         if (style.stylesheet) {
