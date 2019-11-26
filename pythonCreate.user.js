@@ -256,7 +256,7 @@
       const url = window.location.href;
       const hash = getUrlQuery("thundersData");
       const type = $(this).attr("id");
-      const requestUrl = "http://192.168.1.116:5000";
+      const requestUrl = "http://graphicalspider.dev.thundersdata.com";
       // 非分页详情的字段
       const infoOtherArr = [
         "firstSelect",
