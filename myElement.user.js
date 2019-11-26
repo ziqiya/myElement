@@ -74,6 +74,19 @@
     //===start===
 
     /**
+     * @功能描述: 查看元素信息
+     * @参数:
+     * @返回值:
+     */
+
+    $("#inspectBtn").click(function() {
+      const datePoint = new Date().getTime();
+      const attrFunc = new AttrFunc(datePoint);
+      // 查看元素信息
+      attrFunc.pythonListen();
+    });
+
+    /**
      * @功能描述: 一键填充表单按钮点击
      * @参数:
      * @返回值:
@@ -111,56 +124,14 @@
     // 一键填充功能
     //===end===
 
-    // python生成功能
-    //===start===
-
-    /** 打开python表单 */
-    $("#pythonBtn").click(function() {
-      initialCom.pythonForm();
-    });
-
     /** 启用/禁用链接跳转 */
     $("#hrefBtn").click(function() {
       // 切换链接模式
       initialCom.hrefToggle();
     });
 
-    /** 清空python存储 */
-    $("#clearBtn").click(function() {
-      const ls = window.localStorage;
-      ls.setItem("pythonObj", "");
-      $(".selectBtn").text("请选择");
-    });
-
-    /** 查看并打印当前python */
-    $("#inspectCurrentPython").click(function() {
-      const ls = window.localStorage;
-      let pythonString = ls.getItem("pythonObj");
-      let pythonObj = pythonString ? JSON.parse(pythonString) : {};
-      alert(pythonString);
-      console.log(pythonObj);
-    });
-
-    /**
-     * @功能描述: 点击按钮新增python input
-     * @参数: 无
-     * @返回值: 无
-     */
-    $(".addPythonBtn").click(function() {
-      const datePoint = new Date().getTime();
-      const attrFunc = new AttrFunc(datePoint);
-      // 增加python项目
-      attrFunc.appendPythonInput();
-      // python名称改变事件
-      $(`#pythonTitle${datePoint}`).change(attrFunc.pythonNameChange);
-      // Dom选择内容点击事件
-      $(`#pythonDom${datePoint}`).click(function() {
-        attrFunc.pythonListen();
-      });
-      $(".pythonFormActive").click(function() {
-        attrFunc.removePythonListen();
-      });
-    });
+    // 查看元素功能
+    //===start===
 
     /** 转换HTML为字符串 */
     function ToHtmlString(htmlStr) {
@@ -169,6 +140,7 @@
         "<br/>"
       );
     }
+
     function toTXT(str) {
       var RexStr = /\<|\>|\"|\'|\&|　| /g;
       str = str.replace(RexStr, function(MatchStr) {
@@ -201,45 +173,6 @@
       return str;
     }
 
-    /** 取三个dom数组公共项 */
-    function intersect(dom1, dom2, dom3) {
-      function getCommonArr(arr1, arr2) {
-        return arr1.filter(function(num) {
-          return Array.from(arr2).indexOf(num) !== -1;
-        });
-      }
-      const tempArr = getCommonArr(dom1, dom2);
-      const commonArr = getCommonArr(tempArr, dom3);
-      return commonArr;
-    }
-
-    /** 拿到dom最小公共祖宗 */
-    function getCommonParent(event1, event2, event3) {
-      const dom1 = $(event1.target);
-      const dom2 = $(event2.target);
-      const dom3 = $(event3.target);
-      const parents1 = Array.from(dom1.parents());
-      // 包括dom1本身
-      parents1.unshift(dom1[0]);
-      const parents2 = Array.from(dom2.parents());
-      // 包括dom2本身
-      parents2.unshift(dom2[0]);
-      const parents3 = Array.from(dom3.parents());
-      // 包括dom3本身
-      parents3.unshift(dom3[0]);
-      const common = intersect(parents1, parents2, parents3)[0];
-      const selectListDom = common.innerHTML;
-      const firstSelect = dom1.parentsUntil($(common))[0].innerHTML;
-      const secondSelect = dom2.parentsUntil($(common))[0].innerHTML;
-      const lastSelect = dom3.parentsUntil($(common))[0].innerHTML;
-      return {
-        selectListDom,
-        firstSelect,
-        secondSelect,
-        lastSelect
-      };
-    }
-
     /** 将html转换为可以存储的片段,替换<>间的"为' */
     function toStorageString(str) {
       var RexStr = /\<(.*)(")(.*)\>/g;
@@ -249,77 +182,8 @@
       return str;
     }
 
-    /**
-     * @功能描述: 点击发送请求
-     * @参数:
-     * @返回值:
-     */
-    $("#sendPython").click(function() {
-      const pythonKey = window.localStorage.getItem("pythonObj");
-      let oldPythonObj = pythonKey ? JSON.parse(pythonKey) : {};
-      const firstSelect = oldPythonObj.firstSelect;
-      const secondSelect = oldPythonObj.secondSelect;
-      const lastSelect = oldPythonObj.lastSelect;
-      const pythonType = $("#pythonType").val();
-      if (!pythonType) {
-        alert("请选择python类型！");
-        return;
-      }
-      if (!firstSelect) {
-        alert("请选择第一个cardItem！");
-        return;
-      }
-      if (!secondSelect) {
-        alert("请选择第二个cardItem！");
-        return;
-      }
-      if (!lastSelect) {
-        alert("请选择最后一个cardItem！");
-        return;
-      }
-      // 发送请求
-      $.post(
-        `http://192.168.1.92:5000/card`,
-        {
-          need_data_list: [
-            {
-              need_column: "需要的字段名",
-              need_type: "类型有2种：string/url",
-              need_tag: ""
-            }
-          ],
-          card_list: ["子节点1的标签", "子节点2的标签"]
-        },
-        function(data) {
-          alert("data: " + JSON.stringify(data));
-        }
-      );
-    });
-
-    /**
-     * @功能描述: 点击python下载按钮
-     * @参数:
-     * @返回值:
-     */
-    $("#pythonDownload").click(function() {
-      initialCom.pythonDownloadClick();
-    });
-
-    /**
-     * @功能描述: 选择python字段类型
-     * @参数:
-     * @返回值:
-     */
-    $("#pythonType").change(function() {
-      const pythonType = $(this).val();
-      const datePoint = new Date().getTime();
-      const attrFunc = new AttrFunc(datePoint);
-      attrFunc.pythonTypeChange(pythonType);
-    });
-
-    // python生成功能
+    // 查看元素功能
     //===end===
-
     /**
      * @功能描述: 点击切换列表
      * @参数: 无
@@ -725,7 +589,7 @@
         const nodeNameDom = `<span style="font-weight:bold;">${nodeName}</span><br/>`;
         const attrArr = Array.from(el.attributes);
         const attributes = attrArr.reduce((attrs, attr) => {
-          attrs += `${attr.nodeName}='${attr.nodeValue}' `;
+          attrs += `${attr.nodeName}="${attr.nodeValue}" `;
           return attrs;
         }, "");
         const attributesDom = attrArr.reduce((attrs, attr) => {
@@ -742,51 +606,10 @@
         }`;
         return nodeNameDom + attributesDom + htmlDom;
       };
-
       /** python-存储点击的元素 */
       this.selectPythonDom = el => {
-        const index = this.idx || 0;
-        const ls = window.localStorage;
-        const name = $(`#pythonTitle${datePoint + index}`).val();
-        const itemArr = ["firstSelect", "secondSelect", "lastSelect"];
-        this.idx = 0;
         // 移除监听事件
         this.removePythonListen();
-        if (name !== "") {
-          const innerHTML = toStorageString(this.selectedDom);
-          // 缓存中设置新的dom元素
-          let oldPythonObj = ls.getItem("pythonObj")
-            ? JSON.parse(ls.getItem("pythonObj"))
-            : {};
-          if (itemArr.includes(name)) {
-            this.domObj[name] = el;
-          }
-          // 获取公共最小祖先
-          if (
-            this.domObj.firstSelect &&
-            this.domObj.secondSelect &&
-            this.domObj.lastSelect
-          ) {
-            oldPythonObj = {
-              ...oldPythonObj,
-              ...getCommonParent(
-                this.domObj.firstSelect,
-                this.domObj.secondSelect,
-                this.domObj.lastSelect
-              )
-            };
-          }
-          ls.setItem(
-            "pythonObj",
-            JSON.stringify({
-              ...oldPythonObj,
-              [name]: innerHTML
-            })
-          );
-          $(`#pythonDom${datePoint + index}`).text("已选择");
-        } else {
-          alert("请先输入name!");
-        }
       };
 
       /**
@@ -1300,7 +1123,7 @@
                   <div class="addPythonBtn">+</div>
                 </div>
               </div>
-              <div class="funcBtnWrap" style="bottom:60px">
+              <div class="funcBtnWrap" style="bottom:54px">
                 <div id="downloadBtn" class="downloadBtn">下载样式</div>
                 <div id="cancelBtn" class="cancelBtn">删除元素</div>
                 
@@ -1310,15 +1133,15 @@
                 
                 <div id="lineCancelBtn" class="cancelBtn">点击取消画线</div>
               </div>
-              <div class="funcBtnWrap" style="bottom:34px">
+              <div class="funcBtnWrap" style="bottom:28px">
                 <div id="fillFormBtn" class="fillFormBtn">一键填充表单</div>
                 <div id="inspectCurrentPython" class="downloadBtn">查看Python</div>
                 <div id="sendPython" class="downloadBtn">发送Python</div>
-              </div>
+              </div> 
               <div class="funcBtnWrap">
                 <div id="hrefBtn" class="fillFormBtn">禁用跳转</div>
-                <div id="pythonBtn" class="fillFormBtn">生成Python</div>
-              </div>
+                <div id="inspectBtn" class="fillFormBtn">查看元素</div>
+              </div>              
             </ul>
             <ul class="infoUl">
               <div class="emptyBox">
@@ -1483,35 +1306,6 @@
       };
 
       /**
-       * @功能描述: 点击python按钮显示表单
-       * @参数:
-       * @返回值:
-       */
-      this.pythonForm = () => {
-        const _this = this;
-        $(
-          ".fillFormWrap,#fillFormBtn,#cancelBtn,#downloadBtn,.elementListLi"
-        ).hide();
-        $(
-          ".pythonWrap,#clearBtn,#inspectCurrentPython,#pythonDownload,#sendPython"
-        ).show();
-        $("#pythonBtn").addClass("pythonFormActive");
-        $("#pythonBtn")
-          .text("退出Python")
-          .click(function() {
-            $(
-              "#pythonDownload,.pythonWrap,#clearBtn,#inspectCurrentPython,#sendPython"
-            ).hide();
-            $("#downloadBtn,.elementListLi,#fillFormBtn,#cancelBtn").show();
-            $("#pythonBtn").text("生成Python");
-            $(this).removeClass("pythonFormActive");
-            $(this).click(function() {
-              _this.pythonForm();
-            });
-          });
-      };
-
-      /**
        * @功能描述: 点击一键表单填充按钮
        * @参数:
        * @返回值:
@@ -1664,7 +1458,7 @@
       .fillFormLi{height: 22px;margin-bottom: 6px;display: flex;width: 100%;align-items: stretch;}
       .pythonName,.fillFormName,.fillFormInput{width: 100%;outline: none;}
       .fillFormColon{color: #fff;margin: 0 2px;line-height: 20px;}
-			.funcBtnWrap{display:flex;position: absolute;bottom: 8px;width: 100%;justify-content:space-between;}
+			.funcBtnWrap{display:flex;position: absolute;bottom: 0px;width: 100%;justify-content:space-between;}
 		  .elementListLi:hover{box-shadow: 0px 0px 10px #0189fb;border: 1px solid #0189fb;}
 			.collapseBtn{user-select: none;width: 20px;height: 20px;transform: translate(0px, 10px);background: rgba(255,255,255,0.6);text-align: center;border-radius: 10px;color: #333;font-weight: bold;line-height: 20px;cursor: pointer;position: absolute;right: 2px;top: 25%}
 			.siderBarUl{width: 100%;position:relative;padding: 0;padding-bottom: 78px;display: flex;flex-direction: column;}
