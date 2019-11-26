@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         我的元素
 // @namespace    https://github.com/RuanXuSong/myElement
-// @version      1.2
+// @version      1.4
 // @description  用于在页面中插入元素，改变元素样式用于展示
 // @author       Ruan Xusong
 // @match        http://*/*
