@@ -11,30 +11,30 @@
 // ==/UserScript==
 
 (function() {
-  'use strict';
+  "use strict";
   // 元素列表(注:initialStyle中不可有空格)
   const myElementsList = [
     {
-      name: 'div',
-      content: '',
-      type: 'div',
+      name: "div",
+      content: "",
+      type: "div",
       initialStyle:
-        'position:fixed;left:50%;top:50%;width:100px;height:100px;background:#0189fb;z-index:100;cursor:pointer;'
+        "position:fixed;left:50%;top:50%;width:100px;height:100px;background:#0189fb;z-index:100;cursor:pointer;"
     },
     {
-      name: 'button',
-      content: 'button',
-      type: 'button',
+      name: "button",
+      content: "button",
+      type: "button",
       initialStyle:
-        'position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;'
+        "position:fixed;left:50%;top:50%;width:70px;height:25px;background:#fff;border-radius:10px;z-index:100;cursor:pointer;"
     },
     // line中的长宽属性无效
     {
-      name: 'line',
-      content: '',
-      type: 'line',
+      name: "line",
+      content: "",
+      type: "line",
       initialStyle:
-        'position:fixed;left:50%;top:50%;background:#000;z-index:100'
+        "position:fixed;left:50%;top:50%;background:#000;z-index:100"
     }
   ];
   /**
@@ -51,8 +51,8 @@
    * @参数:
    * @返回值:
    */
-  $('#cancelBtn').click(function() {
-    if (!$(this).hasClass('cancelDelete')) {
+  $("#cancelBtn").click(function() {
+    if (!$(this).hasClass("cancelDelete")) {
       initialCom.deleteBtnclick(this);
     } else {
       initialCom.cancelBtnClick(this);
@@ -67,7 +67,7 @@
    * @参数:
    * @返回值:
    */
-  $('#fillFormBtn').click(function() {
+  $("#fillFormBtn").click(function() {
     initialCom.fillForm();
   });
 
@@ -77,8 +77,8 @@
    * @返回值:
    */
 
-  $('#fillFormName').change(function() {
-    if ($('#fillFormInput').val() !== '') {
+  $("#fillFormName").change(function() {
+    if ($("#fillFormInput").val() !== "") {
       // 一键填充表单值
       initialCom.handleFillInputChange();
     }
@@ -90,8 +90,8 @@
    * @返回值:
    */
 
-  $('#fillFormInput').change(function() {
-    if ($('#fillFormName').val() !== '') {
+  $("#fillFormInput").change(function() {
+    if ($("#fillFormName").val() !== "") {
       // 一键填充表单值
       initialCom.handleFillInputChange();
     }
@@ -105,7 +105,7 @@
    * @参数: 无
    * @返回值: 无
    */
-  $('.tabsBtnWrap .tabsBtn').click(function() {
+  $(".tabsBtnWrap .tabsBtn").click(function() {
     initialCom.tabsSwitchIndex($(this).index());
   });
 
@@ -115,7 +115,7 @@
    * @返回值:
    */
 
-  $('.downloadBtn').click(function() {
+  $(".downloadBtn").click(function() {
     initialCom.downloadBtnclick();
   });
 
@@ -124,17 +124,17 @@
    * @参数: 无
    * @返回值: 无
    */
-  $('.addInfoBtn').click(function() {
+  $(".addInfoBtn").click(function() {
     const datePoint = new Date().getTime();
     const attrFunc = new AttrFunc(datePoint);
-    if ($('.infoUl li').length > 0) {
+    if ($(".infoUl li").length > 0) {
       attrFunc.appendInputLi();
       // 属性名称改变事件
       $(`#cssType${datePoint}`).change(attrFunc.cssTypeChange);
       // 属性内容改变事件
       $(`#input${datePoint}`).change(attrFunc.contentChange);
     } else {
-      alert('当前属性为空，请先新建实例元素，再双击选择添加属性!');
+      alert("当前属性为空，请先新建实例元素，再双击选择添加属性!");
     }
   });
 
@@ -143,20 +143,20 @@
    * @参数: 无
    * @返回值: 无
    */
-  $('.elementListLi').click(function() {
+  $(".elementListLi").click(function() {
     const datePoint = new Date().getTime();
     const elementFunc = new ElementFunc(datePoint);
     let lineFlag = false;
-    let type = $(this).attr('type');
+    let type = $(this).attr("type");
     // 解绑上次的线点击事件
     elementFunc.cancelBind();
-    if (type === 'line') {
+    if (type === "line") {
       elementFunc.cancelDrawLine();
       lineFlag = true;
     } else {
-      const initialStyle = $(this).attr('initialStyle');
+      const initialStyle = $(this).attr("initialStyle");
       // 文字内容
-      const content = $(this).attr('content') || '';
+      const content = $(this).attr("content") || "";
       // 创建元素
       const element = elementFunc.createEle(
         datePoint,
@@ -168,17 +168,17 @@
 
     // 线-绑定全局鼠标点击事件
     if (lineFlag) {
-      const lineFunc = new ElementFunc('');
+      const lineFunc = new ElementFunc("");
       // 生成线条消抖
       setTimeout(function() {
-        $('body').bind('click', lineFunc.handleLineClick);
+        $("body").bind("click", lineFunc.handleLineClick);
       }, 1);
     } else {
       // 绑定element鼠标点击事件
-      $(`#${datePoint}`).bind('mousedown', elementFunc.elementMousedown);
+      $(`#${datePoint}`).bind("mousedown", elementFunc.elementMousedown);
       // 绑定松开鼠标事件
-      $(`#${datePoint}`).bind('mouseup', function() {
-        $('body').unbind('mousemove');
+      $(`#${datePoint}`).bind("mouseup", function() {
+        $("body").unbind("mousemove");
       });
       // 绑定双击事件
       $(`#${datePoint}`).dblclick(elementFunc.elementDblclick);
@@ -192,11 +192,11 @@
    */
 
   function jsonToCss(json) {
-    let cssString = '{';
+    let cssString = "{";
     Object.keys(json).map(item => {
       cssString += `${item}:${json[item]};`;
     });
-    cssString += '}';
+    cssString += "}";
     return cssString;
   }
 
@@ -213,11 +213,11 @@
     const hour = dateObj.getHours();
     const minute = dateObj.getMinutes();
     const second = dateObj.getSeconds();
-    return `${year}-${month < 10 ? '0' + month : month}-${
-      date < 10 ? '0' + date : date
-    },${hour < 10 ? '0' + hour : hour}：${
-      minute < 10 ? '0' + minute : minute
-    }：${second < 10 ? '0' + second : second}`;
+    return `${year}-${month < 10 ? "0" + month : month}-${
+      date < 10 ? "0" + date : date
+    },${hour < 10 ? "0" + hour : hour}：${
+      minute < 10 ? "0" + minute : minute
+    }：${second < 10 ? "0" + second : second}`;
   }
 
   /**
@@ -230,9 +230,9 @@
     const hour = dateObj.getHours();
     const minute = dateObj.getMinutes();
     const second = dateObj.getSeconds();
-    return `${hour < 10 ? '0' + hour : hour}:${
-      minute < 10 ? '0' + minute : minute
-    }:${second < 10 ? '0' + second : second}`;
+    return `${hour < 10 ? "0" + hour : hour}:${
+      minute < 10 ? "0" + minute : minute
+    }:${second < 10 ? "0" + second : second}`;
   }
 
   /**
@@ -242,7 +242,7 @@
    */
   function drawDot(key, x, y, color, dotContainer) {
     const dotDiv = `<div class="line${key}" style="background:${color ||
-      '#000'};position:fixed;left:${x}px;top:${y}px;width:5px;height:5px;transform:translate(-50%,-50%);border-radius: 100%;z-index:1000"></div>`;
+      "#000"};position:fixed;left:${x}px;top:${y}px;width:5px;height:5px;transform:translate(-50%,-50%);border-radius: 100%;z-index:1000"></div>`;
     if (dotContainer) {
       $(dotContainer).append(dotDiv);
       return $(dotContainer);
@@ -265,7 +265,7 @@
     // 初始化间隔为实线
     const initialPadding = 1;
     // 间隔
-    const padding = lineType && lineType === 'dotted' ? 8 : initialPadding;
+    const padding = lineType && lineType === "dotted" ? 8 : initialPadding;
     // 每一次变化的x,y值
     const stepX = (Math.abs(x2 - x1) / lineLength) * padding;
     const stepY = (Math.abs(y2 - y1) / lineLength) * padding;
@@ -297,7 +297,7 @@
   function AttrFunc(datePoint) {
     this.appendInputLi = () => {
       let inputLi = `<li class="detailLi ${datePoint}"><input id='cssType${datePoint}'/><div class="fillFormColon">:</div><input cssType='' id='input${datePoint}'/></li>`;
-      $('#siderBar .infoUl').append(inputLi);
+      $("#siderBar .infoUl").append(inputLi);
     };
     /**
      * @功能描述: 改变css名称的事件
@@ -306,19 +306,19 @@
      */
     this.cssTypeChange = function() {
       const ls = window.localStorage;
-      $(`#input${datePoint}`).attr('cssType', $(this).val());
-      if ($(`#input${datePoint}`).val() !== '') {
-        const selectedElement = ls.getItem('selectedElement');
-        if (selectedElement !== '') {
-          if ($(`#input${datePoint}`).attr('cssType') !== '') {
-            const cssType = $(`#input${datePoint}`).attr('cssType');
+      $(`#input${datePoint}`).attr("cssType", $(this).val());
+      if ($(`#input${datePoint}`).val() !== "") {
+        const selectedElement = ls.getItem("selectedElement");
+        if (selectedElement !== "") {
+          if ($(`#input${datePoint}`).attr("cssType") !== "") {
+            const cssType = $(`#input${datePoint}`).attr("cssType");
             const val = $(`#input${datePoint}`).val();
             // 缓存中设置新的CSS样式
-            let oldSiderBarCssObj = JSON.parse(ls.getItem('siderBarCssObj'));
+            let oldSiderBarCssObj = JSON.parse(ls.getItem("siderBarCssObj"));
             let oldCssObj = oldSiderBarCssObj[selectedElement] || {};
             let newCssObj = { ...oldCssObj, [cssType]: val };
             ls.setItem(
-              'siderBarCssObj',
+              "siderBarCssObj",
               JSON.stringify({
                 ...oldSiderBarCssObj,
                 [selectedElement]: newCssObj
@@ -326,10 +326,10 @@
             );
             $(`#${selectedElement}`).css(cssType, val);
           } else {
-            alert('请先选择style名称！');
+            alert("请先选择style名称！");
           }
         } else {
-          alert('请先双击选择实例元素！');
+          alert("请先双击选择实例元素！");
         }
       }
     };
@@ -340,18 +340,18 @@
      */
     this.contentChange = function() {
       const ls = window.localStorage;
-      const selectedElement = ls.getItem('selectedElement');
-      if (selectedElement !== '') {
-        if ($(this).attr('cssType') !== '') {
-          const cssType = $(this).attr('cssType');
+      const selectedElement = ls.getItem("selectedElement");
+      if (selectedElement !== "") {
+        if ($(this).attr("cssType") !== "") {
+          const cssType = $(this).attr("cssType");
           const val = $(this).val();
 
           // 缓存中设置新的CSS样式
-          let oldSiderBarCssObj = JSON.parse(ls.getItem('siderBarCssObj'));
+          let oldSiderBarCssObj = JSON.parse(ls.getItem("siderBarCssObj"));
           let oldCssObj = oldSiderBarCssObj[selectedElement] || {};
           let newCssObj = { ...oldCssObj, [cssType]: val };
           ls.setItem(
-            'siderBarCssObj',
+            "siderBarCssObj",
             JSON.stringify({
               ...oldSiderBarCssObj,
               [selectedElement]: newCssObj
@@ -360,7 +360,7 @@
           $(`#${selectedElement}`).css(cssType, val);
         }
       } else {
-        alert('请先双击选择实例元素！');
+        alert("请先双击选择实例元素！");
       }
     };
   }
@@ -376,7 +376,7 @@
     // 直线位置对象
     this.lineObj = {};
     // 直线标识名
-    this.lineDatePoint = '';
+    this.lineDatePoint = "";
 
     /**
      * @功能描述: 创造元素
@@ -388,11 +388,11 @@
       const element = document.createElement(type);
       // 生成文字节点
       const contentNode = document.createTextNode(content);
-      element.setAttribute('style', initialStyle);
-      element.setAttribute('id', key);
-      element.setAttribute('class', 'createdElement');
+      element.setAttribute("style", initialStyle);
+      element.setAttribute("id", key);
+      element.setAttribute("class", "createdElement");
       element.appendChild(contentNode);
-      $('body').append(element);
+      $("body").append(element);
     };
 
     // 点击元素事件
@@ -403,7 +403,7 @@
       this.o.initialLeft = position.left;
       this.o.initialTop = position.top;
       // 绑定移动事件
-      $('body').bind('mousemove', this.bodyMousemove);
+      $("body").bind("mousemove", this.bodyMousemove);
     };
 
     // 点击元素以后鼠标移动
@@ -414,42 +414,42 @@
       let elementTop = this.o.initialTop + mouseTop - this.o.initialY;
       $(`#${datePoint}`).css({ left: elementLeft, top: elementTop });
       // 移动同时改变input的值
-      $(`#left${datePoint}`).val(elementLeft + 'px');
-      $(`#top${datePoint}`).val(elementTop + 'px');
+      $(`#left${datePoint}`).val(elementLeft + "px");
+      $(`#top${datePoint}`).val(elementTop + "px");
       // 存储left和top的位置
-      this.setLsStyle('left', elementLeft + 'px');
-      this.setLsStyle('top', elementTop + 'px');
+      this.setLsStyle("left", elementLeft + "px");
+      this.setLsStyle("top", elementTop + "px");
     };
 
     // 双击元素事件
     this.elementDblclick = __this => {
       // 保存当前点击对象
-      this.ls.setItem('selectedElement', datePoint);
+      this.ls.setItem("selectedElement", datePoint);
       // 清除原先input
-      $('.detailLi').remove();
+      $(".detailLi").remove();
       // 清除空提示
-      $('.emptyBox').hide();
+      $(".emptyBox").hide();
       // localStorage的css初始化
-      if (!this.ls.getItem('siderBarCssObj')) {
-        this.ls.setItem('siderBarCssObj', JSON.stringify({}));
+      if (!this.ls.getItem("siderBarCssObj")) {
+        this.ls.setItem("siderBarCssObj", JSON.stringify({}));
       }
 
       // 详情属性列表
-      const lsdetailObj = JSON.parse(this.ls.getItem('siderBarCssObj'))[
+      const lsdetailObj = JSON.parse(this.ls.getItem("siderBarCssObj"))[
         datePoint
       ];
       // 默认样式表
       const initialList = [
-        'text',
-        'color',
-        'width',
-        'height',
-        'background',
-        'z-index',
-        'border-radius',
-        'position',
-        'top',
-        'left'
+        "text",
+        "color",
+        "width",
+        "height",
+        "background",
+        "z-index",
+        "border-radius",
+        "position",
+        "top",
+        "left"
       ];
 
       /**
@@ -459,9 +459,9 @@
        */
       function withoutPositionEmpty(obj) {
         const copiedObj = shallowCopy(obj);
-        delete copiedObj['top'];
-        delete copiedObj['left'];
-        return JSON.stringify(copiedObj) === '{}';
+        delete copiedObj["top"];
+        delete copiedObj["left"];
+        return JSON.stringify(copiedObj) === "{}";
       }
       // 浅拷贝
       function shallowCopy(src) {
@@ -480,8 +480,8 @@
           : initialList;
       // 获得初始化样式
       const initialStyleString = $(__this)[0].target.style.cssText;
-      let styleArr = initialStyleString.split(';');
-      styleArr = styleArr.map(item => item.split(':'));
+      let styleArr = initialStyleString.split(";");
+      styleArr = styleArr.map(item => item.split(":"));
       // 批量存储初始化样式
       styleArr.map(([cssType, value]) => {
         if (cssType && value) {
@@ -497,17 +497,17 @@
         });
         // 标记left，top的inputId
         const inputId =
-          item === 'left' || item === 'top'
+          item === "left" || item === "top"
             ? item + datePoint
             : `input${mixedId}`;
         const initialStyle =
-          initialArr && initialArr[1] ? initialArr[1].trim() : '';
+          initialArr && initialArr[1] ? initialArr[1].trim() : "";
         const _this = this;
         // 编辑后的样式
         let modifyLi = `<li class="detailLi ${datePoint}"><span>${item}:</span><input cssType=${item} id='${inputId}' value="${
           lsdetailObj && !withoutPositionEmpty(lsdetailObj) && lsdetailObj[item]
             ? lsdetailObj[item]
-            : ''
+            : ""
         }"/></li>`;
         // 初始化的样式
         let initialLi = `<li class="detailLi ${datePoint}"><span>${item}:</span><input cssType=${item} id='${inputId}' value="${initialStyle}"/></li>`;
@@ -515,9 +515,9 @@
           lsdetailObj && !withoutPositionEmpty(lsdetailObj)
             ? modifyLi
             : initialLi;
-        $('#siderBar .infoUl').append(detailLi);
-        $(`#input${mixedId}`).on('change', function() {
-          const cssType = $(this).attr('cssType');
+        $("#siderBar .infoUl").append(detailLi);
+        $(`#input${mixedId}`).on("change", function() {
+          const cssType = $(this).attr("cssType");
           const val = $(this).val();
           // 缓存中保存样式
           _this.setLsStyle(cssType, val);
@@ -531,22 +531,22 @@
      * @返回值:
      */
     this.setLsStyle = (cssType, val) => {
-      if (!this.ls.getItem('siderBarCssObj')) {
-        this.ls.setItem('siderBarCssObj', JSON.stringify({}));
+      if (!this.ls.getItem("siderBarCssObj")) {
+        this.ls.setItem("siderBarCssObj", JSON.stringify({}));
       }
       // 缓存中设置新的CSS样式
-      let oldSiderBarCssObj = JSON.parse(this.ls.getItem('siderBarCssObj'));
+      let oldSiderBarCssObj = JSON.parse(this.ls.getItem("siderBarCssObj"));
       let oldCssObj =
-        JSON.parse(this.ls.getItem('siderBarCssObj'))[datePoint] || {};
+        JSON.parse(this.ls.getItem("siderBarCssObj"))[datePoint] || {};
       let newCssObj = { ...oldCssObj, [cssType]: val };
       this.ls.setItem(
-        'siderBarCssObj',
+        "siderBarCssObj",
         JSON.stringify({
           ...oldSiderBarCssObj,
           [datePoint]: newCssObj
         })
       );
-      if (cssType === 'text') {
+      if (cssType === "text") {
         $(`#${datePoint}`).text(val);
       } else {
         $(`#${datePoint}`).css(cssType, val);
@@ -555,28 +555,28 @@
 
     // 生成取消画线按钮
     this.cancelDrawLine = () => {
-      $('#lineCancelBtn').show();
+      $("#lineCancelBtn").show();
       // 取消画线事件绑定
-      $('#lineCancelBtn').on('click', this.cancelBind);
+      $("#lineCancelBtn").on("click", this.cancelBind);
     };
 
     // 取消画线事件绑定
     this.cancelBind = () => {
       // 删除按钮初始化
-      if ($('#cancelBtn').hasClass('cancelDelete')) {
-        $('#cancelBtn')
-          .removeClass('cancelDelete')
-          .text('删除');
-        $('.createdElement')
-          .unbind('click')
-          .css('cursor', 'pointer');
-        $('.lineConatiner')
-          .unbind('click')
-          .css('cursor', 'pointer');
+      if ($("#cancelBtn").hasClass("cancelDelete")) {
+        $("#cancelBtn")
+          .removeClass("cancelDelete")
+          .text("删除");
+        $(".createdElement")
+          .unbind("click")
+          .css("cursor", "pointer");
+        $(".lineConatiner")
+          .unbind("click")
+          .css("cursor", "pointer");
       }
-      $('body').unbind('click');
-      $('body').unbind('mousemove');
-      $('#lineCancelBtn').hide();
+      $("body").unbind("click");
+      $("body").unbind("mousemove");
+      $("#lineCancelBtn").hide();
     };
 
     // 处理线的点击事件函数
@@ -586,12 +586,12 @@
       this.lineObj.y1 = e.clientY;
       // 加入线容器
       const lineContainer = `<div class="lineConatiner" id="lineConatiner${this.lineDatePoint}"></div>`;
-      $('body').append(lineContainer);
+      $("body").append(lineContainer);
       // 画出初始点
-      drawDot(this.lineDatePoint, this.lineObj.x1, this.lineObj.y1, '#000');
-      $('body').unbind('click');
+      drawDot(this.lineDatePoint, this.lineObj.x1, this.lineObj.y1, "#000");
+      $("body").unbind("click");
       // 鼠标移动重新渲染线
-      $('body').bind('mousemove', e => {
+      $("body").bind("mousemove", e => {
         this.lineObj.x2 = e.clientX;
         this.lineObj.y2 = e.clientY;
         $(`#lineConatiner${this.lineDatePoint} .line${this.lineDatePoint}`)
@@ -603,12 +603,12 @@
           this.lineObj.y1,
           this.lineObj.x2,
           this.lineObj.y2,
-          '#000'
+          "#000"
         );
       });
       // 重新绑定点击事件，画终点
-      $('body').bind('click', e => {
-        $('body').unbind('mousemove');
+      $("body").bind("click", e => {
+        $("body").unbind("mousemove");
         this.lineObj.x2 = e.clientX;
         this.lineObj.y2 = e.clientY;
         drawLine(
@@ -617,17 +617,17 @@
           this.lineObj.y1,
           this.lineObj.x2,
           this.lineObj.y2,
-          '#000'
+          "#000"
         );
-        $('body').unbind('click');
+        $("body").unbind("click");
         // 绑定下一次起点点击事件
-        $('body').bind('click', this.handleLineClick);
+        $("body").bind("click", this.handleLineClick);
       });
     };
   }
 
   /**
-   * @功能描述: 初始化事件构造函数
+   * @功能描述: 初始化事件构造函数test
    * @参数:无
    * @返回值:无
    */
@@ -635,7 +635,7 @@
     this.ls = window.localStorage;
     this.appendInputLi = () => {
       let inputLi = `<li class="detailLi ${datePoint}"><input id='cssType${datePoint}'/><div>:</div><input cssType='' id='input${datePoint}'/></li>`;
-      $('#siderBar .infoUl').append(inputLi);
+      $("#siderBar .infoUl").append(inputLi);
     };
     // 侧边栏div
     this.siderBarHtml = `
@@ -681,10 +681,10 @@
 
     this.initialAll = () => {
       // 清除上一个页面缓存
-      this.ls.removeItem('siderBarCssObj');
-      this.ls.removeItem('selectedElement');
+      this.ls.removeItem("siderBarCssObj");
+      this.ls.removeItem("selectedElement");
       // 插入siderBar
-      $('body').append(this.siderBarHtml);
+      $("body").append(this.siderBarHtml);
       // 插入list元素
       this.appendList();
       // 插入收缩弹出按钮
@@ -702,9 +702,9 @@
      */
     this.downloadBtnclick = () => {
       const datePoint = longDateFormate(new Date());
-      const contentObj = this.ls.getItem('siderBarCssObj')
-        ? JSON.parse(this.ls.getItem('siderBarCssObj'))
-        : '';
+      const contentObj = this.ls.getItem("siderBarCssObj")
+        ? JSON.parse(this.ls.getItem("siderBarCssObj"))
+        : "";
       const transContentObj = Object.keys(contentObj).map((item, idx) => {
         const cssName = `createdAt:${shortDateFormate(
           new Date(JSON.parse(item))
@@ -726,7 +726,7 @@
      */
     this.createHref = (fileName, content) => {
       // 创建a标签
-      const aTag = document.createElement('a');
+      const aTag = document.createElement("a");
       // 创建blob对象并给他内容
       const blob = new Blob([content]);
       // 给a标签下载文件名
@@ -747,30 +747,30 @@
     this.deleteBtnclick = _this => {
       const __this = this;
       $(_this)
-        .addClass('cancelDelete')
-        .text('退出删除');
-      $('.createdElement')
-        .bind('click', function() {
-          const deletedId = $(this).attr('id');
+        .addClass("cancelDelete")
+        .text("退出删除");
+      $(".createdElement")
+        .bind("click", function() {
+          const deletedId = $(this).attr("id");
           // 缓存中设置删除对应的CSS样式
           let oldSiderBarCssObj = JSON.parse(
-            __this.ls.getItem('siderBarCssObj')
+            __this.ls.getItem("siderBarCssObj")
           );
           delete oldSiderBarCssObj[deletedId];
           __this.ls.setItem(
-            'siderBarCssObj',
+            "siderBarCssObj",
             JSON.stringify({
               ...oldSiderBarCssObj
             })
           );
           $(this).remove();
         })
-        .css('cursor', 'crosshair');
-      $('.lineConatiner')
-        .bind('click', function() {
+        .css("cursor", "crosshair");
+      $(".lineConatiner")
+        .bind("click", function() {
           $(this).remove();
         })
-        .css('cursor', 'crosshair');
+        .css("cursor", "crosshair");
     };
 
     /**
@@ -780,14 +780,14 @@
      */
     this.cancelBtnClick = _this => {
       $(_this)
-        .removeClass('cancelDelete')
-        .text('删除');
-      $('.createdElement')
-        .unbind('click')
-        .css('cursor', 'pointer');
-      $('.lineConatiner')
-        .unbind('click')
-        .css('cursor', 'pointer');
+        .removeClass("cancelDelete")
+        .text("删除");
+      $(".createdElement")
+        .unbind("click")
+        .css("cursor", "pointer");
+      $(".lineConatiner")
+        .unbind("click")
+        .css("cursor", "pointer");
     };
 
     /**
@@ -798,19 +798,19 @@
 
     this.fillForm = () => {
       const _this = this;
-      $('#fillFormBtn')
-        .text('退出表单填充模式')
+      $("#fillFormBtn")
+        .text("退出表单填充模式")
         .click(function() {
-          $('#fillFormBtn').text('一键填充表单');
-          $('.elementListLi').show();
-          $('.fillFormWrap').hide();
+          $("#fillFormBtn").text("一键填充表单");
+          $(".elementListLi").show();
+          $(".fillFormWrap").hide();
           $(this).click(function() {
             _this.fillForm();
           });
         });
-      $('.elementListLi').hide();
-      $('.fillFormWrap').show();
-      $('#stringTextarea').change(function() {
+      $(".elementListLi").hide();
+      $(".fillFormWrap").show();
+      $("#stringTextarea").change(function() {
         _this.handleFillForm();
       });
     };
@@ -823,39 +823,39 @@
 
     this.handleFillForm = () => {
       try {
-        const jsonObj = JSON.parse($('#stringTextarea').val());
+        const jsonObj = JSON.parse($("#stringTextarea").val());
         Object.entries(jsonObj).map(item => {
           const [name, val] = item;
           $(`#${name}`).val(val);
         });
       } catch (err) {
-        alert('请先输入正确格式的JSON字符串！\n错误信息：' + err);
+        alert("请先输入正确格式的JSON字符串！\n错误信息：" + err);
         return;
       }
     };
 
     this.handleFillInputChange = () => {
       // 若原JSON输入框内容为空,先初始化为{}
-      if ($('#stringTextarea').val() === '') {
-        $('#stringTextarea').val('{}');
+      if ($("#stringTextarea").val() === "") {
+        $("#stringTextarea").val("{}");
       }
       try {
         // 原有string
-        const originString = $('#stringTextarea').val();
+        const originString = $("#stringTextarea").val();
         // 新key
-        const attrName = $('#fillFormName').val();
+        const attrName = $("#fillFormName").val();
         // 新val
-        const attrVal = $('#fillFormInput').val();
+        const attrVal = $("#fillFormInput").val();
         // 原有JSON
         const originJson = JSON.parse(originString);
         // 新增键值对或改掉原来的值
         originJson[attrName] = attrVal;
         const modifiedString = JSON.stringify(originJson);
-        $('#stringTextarea').val(modifiedString);
+        $("#stringTextarea").val(modifiedString);
         // 校验并填入表单的值
         this.handleFillForm();
       } catch (err) {
-        alert('请先输入正确格式的JSON字符串！\n错误信息：' + err);
+        alert("请先输入正确格式的JSON字符串！\n错误信息：" + err);
         return;
       }
     };
@@ -867,16 +867,16 @@
      */
     this.tabsSwitchIndex = index => {
       if (
-        !$('.tabsBtnWrap .tabsBtn')
+        !$(".tabsBtnWrap .tabsBtn")
           .eq(index)
-          .hasClass('active')
+          .hasClass("active")
       ) {
-        $('.tabsBtnWrap .tabsBtn')
+        $(".tabsBtnWrap .tabsBtn")
           .eq(index)
-          .addClass('active')
+          .addClass("active")
           .siblings(index)
-          .removeClass('active');
-        $('.siderBarUlWrap ul')
+          .removeClass("active");
+        $(".siderBarUlWrap ul")
           .eq(index)
           .show()
           .siblings(index)
@@ -888,41 +888,41 @@
     this.appendList = () => {
       myElementsList.map(({ name, initialStyle, type, content }) => {
         let element = `<li class="elementListLi" type=${type} initialStyle=${initialStyle} content=${content}>${name}</li>`;
-        $('#siderBar .siderBarUl').append(element);
+        $("#siderBar .siderBarUl").append(element);
       });
     };
 
     // 点击收缩按钮事件
     this.toggleCollapse = () => {
       // 若已经折叠，则打开
-      if ($('.collapseBtn').hasClass('collapsed')) {
-        $('.collapseBtn').removeClass('collapsed');
-        $('.collapseBtn').text('<');
-        $('#siderBar').css({
-          left: '0px',
-          'min-height': '200px',
-          height: 'auto'
+      if ($(".collapseBtn").hasClass("collapsed")) {
+        $(".collapseBtn").removeClass("collapsed");
+        $(".collapseBtn").text("<");
+        $("#siderBar").css({
+          left: "0px",
+          "min-height": "200px",
+          height: "auto"
         });
-        $('.tabsBtnWrap').show();
-        $('.siderBarUlWrap').show();
+        $(".tabsBtnWrap").show();
+        $(".siderBarUlWrap").show();
       } else {
         // 若未折叠，则折叠
-        $('.collapseBtn').addClass('collapsed');
-        $('.collapseBtn').text('>');
-        $('#siderBar').css({
-          left: '-184px',
-          'min-height': 'unset',
-          height: '40px'
+        $(".collapseBtn").addClass("collapsed");
+        $(".collapseBtn").text(">");
+        $("#siderBar").css({
+          left: "-184px",
+          "min-height": "unset",
+          height: "40px"
         });
-        $('.tabsBtnWrap').hide();
-        $('.siderBarUlWrap').hide();
+        $(".tabsBtnWrap").hide();
+        $(".siderBarUlWrap").hide();
       }
     };
 
     // 插入收缩弹出按钮
     this.appendCollapseBtn = () => {
-      $('#siderBar').append(this.collapseBtn);
-      $('.collapseBtn').click(() => {
+      $("#siderBar").append(this.collapseBtn);
+      $(".collapseBtn").click(() => {
         this.toggleCollapse();
       });
     };
@@ -958,8 +958,8 @@
 			.tabsBtn{color:#0189fb;border: 1px solid #fff;text-align:center;width:48%;flex: 1;background: #fff;border-radius: 5px 5px 0 0;cursor:pointer;}
 			.tabsBtnWrap .active{color:#fff;background:#0189fb;border: 1px solid #0189fb;}
 			#siderBar{overflow: hidden;flex-direction: column;z-index:1000;background: rgba(0,0,0,0.3);position: fixed;left: 0;top: 10%;width: 200px;min-height: 200px;border-radius: 0 5px 5px 0;padding: 10px;display:flex;transition:all 0.3s ease}`;
-      var style = document.createElement('style');
-      style.type = 'text/css';
+      var style = document.createElement("style");
+      style.type = "text/css";
       if (style.stylesheet) {
         //IE
         style.stylesheet.cssText = cssString;
@@ -967,7 +967,7 @@
         //w3c
         style.innerHTML = cssString;
       }
-      var heads = document.getElementsByTagName('head');
+      var heads = document.getElementsByTagName("head");
       if (heads.length) {
         heads[0].appendChild(style);
       } else {
